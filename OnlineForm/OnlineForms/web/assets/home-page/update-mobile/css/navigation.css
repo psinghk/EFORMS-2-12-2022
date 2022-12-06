@@ -1,0 +1,45 @@
+.main-nav, .main-nav * {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.main-nav > ul > li {
+    position: relative;
+    white-space: nowrap;
+    float: left;
+    line-height: 38px;
+}
+.main-nav a:hover, .main-nav .active > a, .main-nav li:hover > a {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-position: under;
+}
+.main-nav a {
+    display: block;
+    position: relative;
+    color: #fff;
+    padding: 10px 15px;
+    margin: 0 10px;
+    transition: 0.3s;
+    font-size: 14px;
+    font-family: "Exo", sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+#header {
+    height: 80px;
+    transition: all 0.5s;
+    z-index: 997;
+    transition: all 0.5s;
+    padding: 20px 0;
+    background: rgba(0, 0, 0, 0);
+}
+#header .logo img {
+    padding: 0;
+    max-height: 55px;
+}
+#header.header-scrolled, #header.header-pages {
+    height: 75px;
+    padding: 10px 0;
+    background: #383d41cf;
+}

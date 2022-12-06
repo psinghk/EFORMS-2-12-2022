@@ -1,0 +1,13 @@
+Please check the following:-
+
+(Point number 1-3 only when  Telnet was not happenning )
+
+Whether you are able to telnet smsgw.sms.gov.in 443 or telnet smsgw.sms.gov.in 80.  
+If it is not happening, And, if you are behind NICNET firewall, please coordinate with Cyber Security Division. Rule must allowed at firewall to avail the service.
+If your firewall rule is allowed and still you are not able to telnet, please disable the local firewall at your server else coordinate with Network administrator.   
+We are also sending you the sample codes, Integration Guidelines, API Guide and Template to get your sender ID exempted. If already exempted, please ignore. It is recommended to go through the API Guide before integration the API. You can use the sample codes attached to call the API.
+
+For any queries, Please drop a mail to <b>servicedesk@nic.in</b> or call at 1800 111 555
+
+Regards,
+SMS Support Team  

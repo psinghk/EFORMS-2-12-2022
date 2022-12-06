@@ -1,0 +1,2588 @@
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+        "http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+    <constant name="struts.enable.DynamicMethodInvocation" value="false" />
+    <constant name="struts.mapper.action.prefix.enabled" value="true"/>
+    <constant name="struts.action.excludePattern" value="/struts/webconsole.html" />
+    <constant name="struts.devMode" value="true" />
+    <constant name="struts.custom.i18n.resources" value="resources.global"/>
+    <constant name="struts.multipart.maxSize" value="1048576"/>
+    <!-- Configuration for the default package. -->
+
+    <package name="default" extends="struts-default,json-default">
+        <interceptors>   
+            <interceptor name="checkIpInterceptor" class="com.org.controller.CheckIpInterceptor" />        
+            <interceptor name="cachingHeadersInterceptor" class="com.org.controller.CachingHeadersInterceptor" />
+            <interceptor class="com.org.controller.LoginInterceptor" name="loginInterceptor"/>
+            <interceptor class="com.org.controller.RetiredLoginInterceptor" name="retired_loginInterceptor"/>
+            <interceptor class="com.org.controller.LoggingInterceptor" name="loggingInterceptor"/>
+            <interceptor class="com.org.controller.AllowedRegNumbersInterceptor" name="allowedRegNumberInterceptor"/>          
+            <interceptor-stack name="myStack">                
+                <interceptor-ref name="cachingHeadersInterceptor" />
+<!--                              <interceptor-ref name="loggingInterceptor" />                -->
+                <interceptor-ref name="params" />          
+                <interceptor-ref name="json">
+                    <param name="enableSMD">true</param>
+                </interceptor-ref>
+                <interceptor-ref name="fileUpload" >
+                    <param name="maximumSize">1048576</param>
+                    <param name="allowedTypes">application/pdf,text/csv,application/vnd.ms-excel</param>
+<!--                    <param name="allowedTypes">
+                        image/png,image/jpeg,image/pjpeg,application/pdf,text/csv,
+                    </param>-->
+                </interceptor-ref>                                     
+                <interceptor-ref name="defaultStack">
+                    <param name="params.excludeParams">dojo\..*,^struts\..*,^session\..*,^request\..*,^application\..*,^servlet(Request|Response)\..*,parameters\...*</param>
+                    <param name="exception.logEnabled">true</param>
+                    <param name="exception.logLevel">ERROR</param>
+                </interceptor-ref>                      
+            </interceptor-stack>
+            
+           <interceptor-stack name="loginStack">
+                <interceptor-ref name="loginInterceptor" />
+                <interceptor-ref name="checkIpInterceptor" />
+                <interceptor-ref name="myStack" />
+            </interceptor-stack>
+            
+            <interceptor-stack name="retired_loginStack">
+                <interceptor-ref name="retired_loginInterceptor" />
+                <interceptor-ref name="myStack" />
+            </interceptor-stack>
+            
+            <interceptor-stack name="regNumStack">
+                <interceptor-ref name="loginInterceptor" />
+                <interceptor-ref name="checkIpInterceptor" />
+                <interceptor-ref name="allowedRegNumberInterceptor" />
+                <interceptor-ref name="myStack" />
+            </interceptor-stack>                                                                       
+        </interceptors>
+        
+        <default-interceptor-ref name="loginStack"/>
+        
+        <global-results>
+            <result name="showuserdata" type="redirectAction">showUserData</result>
+            <result name="showlinkdata" type="redirectAction">showLinkData</result>
+            <result name="showlinkdataforca" type="redirectAction">showLinkData?adminValue=ca</result>
+            <result name="showlinkdataforco" type="redirectAction">showLinkData?adminValue=co</result>
+            <result name="showlinkdataforsup" type="redirectAction">showLinkData?adminValue=sup</result>
+            <result name="showlinkdataforadmin" type="redirectAction">showLinkData?adminValue=admin</result>
+<!--            <result name="switch" type="redirectAction">switchToCorrectPanel</result>-->
+            <result name="showadmindata" type="redirectAction">profile</result>
+            <result name="sessionExpired" type="redirectAction">logout</result>
+            <result name="securityerror" type="redirectAction">logout</result>
+            <result name="error" type="redirectAction">logout</result>
+            <!--<result name="sahil" type="redirectAction">showUserData</result> -->
+            <result name="exception" type="redirectAction">error</result>
+            <result name="runtime_exception" type="redirectAction">error</result>
+            <result name="logout" type="redirectAction">logout</result>
+            <result name="unauthorized" type="json">
+                <param name="statusCode">401</param>
+<!--                <param name="includeProperties">error</param>-->
+<!--                <param name="excludeNullProperties">true</param>-->
+            </result>
+
+            <!--Added for SSO-->
+            <result name="ssosessionout" type="redirectAction">ssosessionout_parichay</result>
+            <result name="ssosessionoutretired" type="redirectAction">ssosessionoutretired_parichay</result>
+            <result name="fetchresponseString" type="redirectAction">fetchString_parichay</result>
+            <result name="fetchresponseStringretired" type="redirectAction">fetchStringretired_parichay</result>
+            <result name="failedredirect" type="redirectAction">failedredirect_parichay</result>
+            <result name="failedredirectretired" type="redirectAction">failedredirectretired_parichay</result>
+            <result name="tempered" type="redirectAction">ssosessionout_parichay</result>
+            <result name="temperedretired" type="redirectAction">ssosessionoutretired_parichay</result>
+            <result name="coordinator_sso" type="redirectAction">coordinator_parichay</result>
+            <result name="support_sso" type="redirectAction">support_parichay</result>
+            <result name="admin_sso" type="redirectAction">admin_parichay</result>
+            <result name="ca_sso" type="redirectAction">ca_parichay</result>
+            
+             <!--|EO Added for SSO-->
+            
+
+            <result name="input" type="json">
+                <param name="root">fieldErrors</param>
+                <param name="wrapPrefix"><![CDATA[{ "errors" : ]]></param>
+                <param name="wrapSuffix"><![CDATA[}]]></param>
+            </result>
+        </global-results>
+        
+        <global-exception-mappings>
+            <exception-mapping exception="java.lang.Exception" result="exception"></exception-mapping>
+            <exception-mapping exception="java.lang.Error" result="error"></exception-mapping>
+            <exception-mapping exception="java.lang.RuntimeException" result="runtime_exception"></exception-mapping>
+            <exception-mapping exception="org.apache.struts.register.exceptions.SecurityBreachException" result="securityerror" />
+            <exception-mapping exception="java.io.IOException" result="login"></exception-mapping>
+        </global-exception-mappings>
+        
+        
+        <action name="Captcha" class="entities.Captcha">
+            <interceptor-ref name="myStack" />
+            <result name="success" type="httpheader" >
+                <param name="status" >200</param>
+            </result>
+            <result name="input">index.jsp</result>            
+        </action>
+        
+        <action name = "loginNow">
+            <interceptor-ref name="myStack" />
+            <result name="success">index.jsp</result>         
+        </action>
+        
+        <!--  below action commmented by avinash shukla on 12 august 2021 -->
+        
+<!--        <action name = "RequestCounter" class="admin.DashBoard" method="RequestCounter">
+            <interceptor-ref name="myStack" />
+            <result type="json"></result>         
+        </action>-->
+        
+        <action name = "error">
+            <result>/WEB-INF/jsps/error.jsp</result>            
+        </action>
+<!--        <action name = "unauthorized">
+            <result>/WEB-INF/jsps/unauthorized.jsp</result>            
+        </action>-->
+        <action name = "profile">
+            <result>/WEB-INF/jsps/Profile.jsp</result>            
+        </action>
+        
+        <!-- ALL DOWNLOADS -->       
+        <action name="download_1" class="com.org.controller.checkFile" method="DownloadFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        
+           <action name="Download_EmaiAct_pdfFile" class="com.org.controller.checkFile" method="Download_EmaiAct_pdfFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="download_1_retired" class="com.org.controller.checkFile" method="DownloadFileRetired">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+           
+        <action name="download_2" class="com.org.controller.checkFile" method="DownloadFiles">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action> 
+        <action name="download_3" class="com.org.controller.checkFile" method="DownloadBulkSampleFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="Bulk-FileFormat.csv"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>  
+
+          <action name="download_dlist" class="com.org.controller.checkFile" method="downloaDlistBulkSampleFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="DlistBulk-FileFormat.xlsx"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>  
+        
+         <action name="download_Retired_Manual" class="com.org.controller.checkFile" method="download_Retired_Manual">
+<!--            <interceptor-ref name="regNumStack" />-->
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="Retired-DOREXT_Manual.pdf"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>  
+ 
+        <action name="download_4" class="com.org.controller.checkFile" method="DownloadPDF">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>  
+        <action name="download_5" class="com.org.controller.checkFile" method="DownloadPDFCA">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="download_6" class="admin.UserTrack" method="DownloadMultiplePDF">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action> 
+        
+        <action name="download_15" class="admin.UserTrack" method="DownloadCsv">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action> 
+        
+        <action name="download_webcast" class="admin.UserTrack" method="DownloadWebcast">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>    
+        <action name="download_7" class="com.org.controller.checkFile" method="DownloadDnsSampleFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="DNS-FileFormat.csv"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>        
+        <action name="download_8" class="com.org.controller.checkFile" method="DownloadDnsModifySampleFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="DNS-FileFormat-modify.csv"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>     
+        <action name="download_9" class="com.org.controller.checkFile" method="DownloadFileDns">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="uploaded_filename"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="download_10" class="admin.UserTrack" method="DownloadDOC">
+            <interceptor-ref name="myStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="download_11" class="admin.UserTrack" method="DownloadManual">
+            <interceptor-ref name="myStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="download_12" class="com.org.controller.checkFile" method="DownloadCertRelay">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="download_valid" class="com.org.controller.checkFile" method="DownloadValidFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>   
+        <action name="download_error" class="com.org.controller.checkFile" method="DownloadErrorFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action> 
+        <action name="download_notvalid" class="com.org.controller.checkFile" method="DownloadNotValidFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action> 
+        <action name="hardware_download_1" class="com.org.controller.checkFile" method="DownloadExemptedFile">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${uploaded_filename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>   
+        <!-- DONE -->
+        
+        <!-- SIGNUP -->
+        <action name="AuthEmail" class="com.org.controller.LoginAction">
+            <interceptor-ref name="myStack" />
+            <result type="json">
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers,userValues.hodData,userValues.impData,userValues.uid,userValues.authenticated,userValues.isInRoTable,userValues.isNICEmployee,userValues.userOfficialData
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+         <action name="CheckEmail" class="com.org.controller.LoginAction" method="checkEmail">
+            <interceptor-ref name="myStack" />
+            <result type="json">
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers,userValues.hodData,userValues.impData,userValues.uid,userValues.authenticated,userValues.isInRoTable,userValues.isNICEmployee,userValues.userOfficialData
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        
+        <!-- SIGNUP For Non Gov -->
+        <action name="ValidateEmail" class="com.org.controller.LoginAction" method="processNonGovEmail">
+            <result type="json">
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers,userValues.hodData,userValues.impData,userValues.uid,userValues.authenticated,userValues.isInRoTable,userValues.isNICEmployee,userValues.userOfficialData
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="AuthPwd" class="com.org.controller.LoginAction" method="isAuthenticUser">
+            <result type="json" >
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+      
+         <action name="AuthPwdForUpdateMobile" class="com.org.controller.LoginAction" method="isAuthenticUserForUpdateMobile">
+             <interceptor-ref name="myStack" />
+            <result type="json" >
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="fetchBoForEmployeeRetiringThisMonth" class="com.org.controller.Email_registration" method="fetchBoForEmployeeRetiringThisMonth">
+            <result type="json">
+                <param name="includeProperties">boForUserRetiringThisMonth,coordsOrDas,errorMessageRetiring</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>
+        </action>
+       
+        <action name="OtpGenerate" class="com.org.controller.LoginAction" method="generateOtp">
+            <result type="json">
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="checkldapmobile" class="com.org.controller.LoginAction" method="checkldapmobile">
+            <result type="json">
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers,userValues.hodData,userValues.impData,userValues.uid,userValues.authenticated,userValues.isInRoTable,userValues.isNICEmployee,userValues.userOfficialData
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="verifyOtp" class="com.org.controller.LoginAction" method="verifyOtp">
+            <result type="json">
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers,userValues.emailOtp,userValues.mobileOtp
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action> 
+        
+        <action name="verifyEmpCode" class="com.org.controller.LoginAction" method="verifyEmployeeCode">
+            <result type="json" >
+                <param name="excludeProperties">
+                    userValues.password
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        
+        <action name="Forms">
+            <result name="success">/WEB-INF/jsps/Forms.jsp</result>             
+        </action>
+        <action name="e_sign">
+            <result>/WEB-INF/jsps/e_sign.jsp</result>             
+        </action>
+        
+        <action name="Email_registration" class="com.org.controller.Email_registration" method="initializeEmailPage">
+            <result>/WEB-INF/jsps/Email_registration.jsp</result>             
+        </action>
+        <action name="Dns_registration">
+            <result>/WEB-INF/jsps/Dns_registration.jsp</result>             
+        </action>
+        <action name="ImapPop_registration">
+            <result>/WEB-INF/jsps/ImapPop_registration.jsp</result>             
+        </action>
+        <action name="Change_ip">
+            <result>/WEB-INF/jsps/Change_ip.jsp</result>             
+        </action>
+        <action name="Ldap_registration">
+            <result>/WEB-INF/jsps/Ldap_registration.jsp</result>             
+        </action>
+        <action name="Mobile_registration">
+            <result>/WEB-INF/jsps/Mobile_registration.jsp</result>             
+        </action>
+        <action name="Nkn_registration">
+            <result>/WEB-INF/jsps/Nkn_registration.jsp</result>             
+        </action>
+        <action name="Relay_registration">
+            <result>/WEB-INF/jsps/Relay_registration.jsp</result>             
+        </action>
+        <action name="Wifi_registration">
+            <result>/WEB-INF/jsps/Wifi_registration.jsp</result>             
+        </action>
+        <action name="Sms_Registration">
+            <result>/WEB-INF/jsps/Sms_Registration.jsp</result>             
+        </action>
+        <action name="Distribution_registration">
+            <result>/WEB-INF/jsps/Distribution_registration.jsp</result>             
+        </action>
+        <action name = "email_act_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/email_act_preview.jsp</result>             
+        </action>
+        
+        
+        <action name="Firewall_registration">
+            <result>/WEB-INF/jsps/firewall.jsp</result>             
+        </action> 
+        <action name="Wifiport_registration">
+            <result>/WEB-INF/jsps/wifiport.jsp</result>             
+        </action>
+        <action name="Webcast_registration">
+            <result>/WEB-INF/jsps/Webcast_registration.jsp</result>             
+        </action>  
+        
+        
+        <action name = "Daonboarding_registration">
+            <result>/WEB-INF/jsps/daonboarding.jsp</result>            
+        </action>
+        
+        <action name="checkSupportEmail" class="com.org.controller.LoginAction" method="checkSupportEmail">
+            <interceptor-ref name="myStack" />
+            <result type="json">
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        <action name="OtpGenerate_updatemobile" class="com.org.controller.Signup" method="OtpGenerate_updatemobile">
+            <result type="json"></result>
+        </action>
+        <action name="OtpGenerate_newmobile" class="com.org.controller.Signup" method="OtpGenerate_newmobile">
+            <result type="json"></result>
+        </action>
+        <action name="verify_old_code" class="com.org.controller.Signup" method="verify_old_code">
+            <result type="json"></result>
+        </action>   
+        <action name="verify_new_code" class="com.org.controller.Signup" method="verify_new_code">
+            <result type="json"></result>
+        </action>             
+        <action name="CheckUser" class="com.org.controller.Signup" method="CheckUser">
+            <result type="json"></result>
+        </action>
+        <action name="verify_new_code_mobile" class="com.org.controller.Signup" method="verify_new_code_update_mobile">
+            <result type="json"></result>
+        </action>
+        <action name="checkrequest" class="com.org.controller.Signup" method="checkrequest">
+            <result type="json">/WEB-INF/jsps/SignUp.jsp</result>
+        </action>
+        
+        <action name = "logout" class = "com.org.controller.LogoutAction">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name="resendMobileOtp" class="com.org.controller.LoginAction" method="resendMobile">
+            <interceptor-ref name="myStack" />
+            <result type="json">
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="resendEmailOtp" class="com.org.controller.LoginAction" method="resendEmailOtp">
+            <interceptor-ref name="myStack" />
+            <result type="json">
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        <action name="checkProfile" class="com.org.controller.Signup" method="checkProfile">
+            <result type="json">/WEB-INF/jsps/Profile.jsp</result>
+        </action>
+        <action name="ResendRequest" class="admin.UserTrack" method="ResendRequest">
+            <result type="json"></result>
+        </action>  
+        <action name="fileDelete" class="admin.UserTrack" method="fileDelete">
+            <result type="json"></result>
+        </action>
+        <!-- PROFILE -->
+        <action name="PersonalProfile" class="com.org.controller.Profile" method="PersonalProfile">
+            <result type="json">/WEB-INF/jsps/Profile.jsp</result>
+        </action>
+        <action name="orgProfile" class="com.org.controller.Profile" method="orgProfile">
+            <result type="json">/WEB-INF/jsps/Profile.jsp</result>
+        </action>
+        <action name="centralMinistry" class="com.org.controller.Profile" method="centralMin">
+            <result type="json"></result>
+        </action>
+        <action name="fetchSingleDept" class="com.org.controller.Profile" method="fetchSingleDept">
+            <result type="json"></result>
+        </action>
+        <action name="psuMinistry" class="com.org.controller.Profile" method="psuMin">
+            <result type="json"></result>
+        </action>
+        <action name="constMinistry" class="com.org.controller.Profile" method="constMin">
+            <result type="json"></result>
+        </action>
+        <action name="centralDepartment" class="com.org.controller.Profile" method="centralDep">
+            <result type="json"></result>
+        </action>
+        <action name="getDistrict" class="com.org.controller.Profile" method="getDistrict">
+            <result type="json"></result>
+        </action>
+        <action name="getHODdetails" class="com.org.controller.Profile" method="getHODdetails">
+            <result type="json">/WEB-INF/jsps/Profile.jsp</result>
+        </action>      
+        
+        <!-- E-SIGN --> 
+        <action name="esign" class="com.org.controller.e_signing" method="Esign">
+            <result type="json"></result>
+        </action>       
+        <action name="consent" class="com.org.controller.e_signing" method="Consent">
+            <result type="json"></result>
+        </action>
+        
+        <action name="consentMobile" class="com.org.controller.UpdateMobile_registration" method="consentMobile">
+            <interceptor-ref name="myStack" />
+            <result type="json"></result>
+        </action>
+        
+        <action name="consentRetired" class="com.org.controller.e_signing" method="ConsentRetired">
+            <interceptor-ref name="retired_loginStack" />
+            <result type="json"></result>
+        </action>
+        
+        <action name="aadhaarCheck" class="com.org.controller.e_signing" method="AadhaarCheck">
+            <result type="json"></result>
+        </action> 
+        <action name="otpAadharCheck" class="com.org.controller.e_signing" method="OtpAadhaar">
+            <result type="json"></result>
+        </action>   
+        <action name="generatefile" class="admin.UserTrack" method="genPDF">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${genfileDownload}"</param>
+                <!--                <param name="contentDisposition">attachment;filename="abc.pdf"</param>-->
+                <param name="bufferSize">1024</param>
+            </result>
+            <result name="failed" type="json"></result>
+        </action>   
+        <action name="fileDownload" class="com.org.controller.e_signing" method="DownloadPDF">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="${esignedfilename}"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>       
+    
+        <!-- SMS FORM -->
+        <action name="sms_tab1" class="com.org.controller.Sms_registration" method="SMS_tab1">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action>
+        <action name="sms_tab2" class="com.org.controller.Sms_registration" method="SMS_tab2">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action>
+        <action name="sms_tab3" class="com.org.controller.Sms_registration" method="SMS_tab3">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action>
+        <action name="sms_tab4" class="com.org.controller.Sms_registration" method="SMS_tab4">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action>
+        <action name="sms_tab5" class="com.org.controller.Sms_registration" method="SMS_tab5">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action>       
+        <action name="sms_tab6" class="com.org.controller.Sms_registration" method="SMS_tab6">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action> 
+        <action name="sms_tab7" class="com.org.controller.Sms_registration" method="SMS_tab7">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action> 
+        <action name="fill_sms_admin_tab" class="com.org.controller.Sms_registration" method="fill_sms_admin_tab">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action>
+        
+         <action name="Email_bulk_tab2" class="com.org.controller.Email_registration" method="Email_bulk_tab2">
+            <result type="json"></result>
+        </action>
+        
+               
+        
+        <!--- DNS Form -->
+        <action name="dns-domaintracker">
+            <result>/WEB-INF/jsps/dns_domaintracker.jsp</result>
+        </action>
+        
+        <action name="dns-domaintracker-json" class="com.org.controller.DnsTeamController" method="fetchDnsTeamData">           
+            <result type="json">
+                <param name="includeProperties">dnsTeamData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>             
+        </action>
+        <action name="dnsTrackerFrmData-post" class="com.org.controller.DnsTeamController" method="dnsTrackerFrmDataPost" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">dnsTrckerFrmData.*, rcd_inserted</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>
+        </action>
+        <action name="dnsTrackerFrmData-post-fetch" class="com.org.controller.DnsTeamController" method="dnsTrackerFrmDataPostFetch" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">dnsTractFetchData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>
+        </action>
+        <action name="dnsTrackerFrmData-post-delete" class="com.org.controller.DnsTeamController" method="dnsTrackerFrmDataPostDelete" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">rcd_inserted</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>
+        </action>
+        <action name="dns_tab2" class="com.org.controller.Dns_registration" method="DNS_tab2">
+            <result type="json">/WEB-INF/jsps/Dns_registration.jsp</result>
+        </action>
+        <action name="dns_tab3" class="com.org.controller.Dns_registration" method="DNS_tab3">
+            <result type="json">/WEB-INF/jsps/Dns_registration.jsp</result>
+        </action>
+        <action name="dns_bulk_tab2" class="com.org.controller.Dns_registration" method="dns_bulk_tab2">
+            <result type="json"></result>
+        </action>
+        <action name="dns_tab4" class="com.org.controller.Dns_registration" method="DNS_tab4">
+            <result type="json">/WEB-INF/jsps/Dns_registration.jsp</result>
+        </action>
+        <action name="checkDomain" class="com.org.controller.Dns_registration" method="checkDomainfromAjax">
+            <result type="json">/WEB-INF/jsps/Dns_registration.jsp</result>
+        </action>
+ 
+        <!--- WIFI Form -->
+        
+        <action name="wifi_tab1" class="com.org.controller.Wifi_registration" method="Wifi_tab1">
+            <result type="json">/WEB-INF/jsps/Wifi_registration.jsp</result>
+        </action>
+        <action name="wifi_tab2" class="com.org.controller.Wifi_registration" method="Wifi_tab2">
+            <result type="json">/WEB-INF/jsps/Wifi_registration.jsp</result>
+        </action>
+        <action name="wifi_tab3" class="com.org.controller.Wifi_registration" method="Wifi_tab3">
+            <result type="json">/WEB-INF/jsps/Wifi_registration.jsp</result>
+        </action>
+        <action name="checkbo" class="com.org.controller.Wifi_registration" method="checkbo">
+            <result type="json">/WEB-INF/jsps/Wifi_registration.jsp</result>
+        </action>
+        <action name="fetchApplicantData" class="com.org.controller.Wifi_registration" method="fetchApplicantData">
+            <result type="json">/WEB-INF/jsps/Wifi_registration.jsp</result>
+        </action>
+        <action name="fetchApplicantPendingData" class="com.org.controller.Wifi_registration" method="fetchApplicantPendingData">
+            <result type="json">/WEB-INF/jsps/Wifi_registration.jsp</result>
+        </action>
+        <!-- SINGLE Form -->
+        
+        <action name="single_tab1" class="com.org.controller.Email_registration" method="Single_tab1">
+            <result type="json"></result>
+        </action>
+        <action name="single_tab2" class="com.org.controller.Email_registration" method="Single_tab2">
+            <result type="json"></result>
+        </action>
+        <action name="checkAvailableEmail" class="com.org.controller.Email_registration" method="checkAvailableEmail">
+            <result type="json"></result>
+        </action>
+        <action name="checkPrefmail" class="com.org.controller.Email_registration" method="checkPrefmail">
+            <result type="json"></result>
+        </action>
+        <!-- Email Activate Form -->
+        <action name="email_act_tab1" class="com.org.controller.Email_registration" method="email_act_tab1">
+            <result type="json"></result>
+        </action>
+        <action name="email_act_tab2" class="com.org.controller.Email_registration" method="email_act_tab2">
+            <result type="json"></result>
+        </action>
+        <!-- Email Activate Form -->
+        <action name="email_deact_tab1" class="com.org.controller.Email_registration" method="email_deact_tab1">
+            <result type="json"></result>
+        </action>
+        <action name="email_deact_tab2" class="com.org.controller.Email_registration" method="email_deact_tab2">
+            <result type="json"></result>
+        </action>
+        
+        
+         
+        <!-- dor ext form -->
+        
+        <action name="dor_ext_tab1" class="com.org.controller.Email_registration" method="dor_ext_tab1">
+            <result type="json"/>
+        </action>
+                <action name="dor_ext_retired_tab1" class="com.org.controller.Email_registration" method="dor_ext_retired_tab1">
+<!--            <result type="json">
+                <param name="includeProperties">form_details.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>   -->
+             <result type="json"/>
+        </action>
+                <action name="dor_ext_retired_tab2" class="com.org.controller.Email_registration" method="dor_ext_retired_tab2">
+            <result type="json"/>
+        </action>
+        
+        <action name="dor_ext_retired_tab1_new" class="com.org.controller.ValidateRetiredEmployee" method="dor_ext_retired_tab1">
+            <interceptor-ref name="retired_loginStack" />
+            <result type="json"/>
+        </action>
+        
+        <action name="dor_ext_tab2" class="com.org.controller.Email_registration" method="dor_ext_tab2">
+            <result type="json"/>
+        </action>
+        
+        <action name="fetchDor" class="com.org.controller.Email_registration" method="fetchDor">
+           <result type="json">
+                <param name="includeProperties">.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>
+        </action>
+        <action name="fetchDoe" class="com.org.controller.Email_registration" method="fetchDateOfAccountExpiry">
+           <result type="json">
+                <param name="includeProperties">.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>
+        </action>
+        
+        <!-- BULK Form -->
+        
+        <action name="bulk_tab1" class="com.org.controller.Email_registration" method="Bulk_tab1">
+            <result type="json"></result>
+        </action>
+        <action name="bulk_tab2" class="com.org.controller.Email_registration" method="Bulk_tab2">
+            <result type="json"></result>
+        </action>
+        <action name="bulk_tab3" class="com.org.controller.Email_registration" method="Bulk_tab3">
+            <result type="json"></result>
+        </action>
+        
+        <!-- NKN Form -->
+        
+        <action name="nkn_single_tab1" class="com.org.controller.Email_registration" method="Nkn_single_tab1">
+            <result type="json"></result>
+        </action>
+        <action name="nkn_bulk_tab1" class="com.org.controller.Email_registration" method="Nkn_bulk_tab1">
+            <result type="json"></result>
+        </action>
+        <action name="nkn_bulk_tab2" class="com.org.controller.Email_registration" method="Nkn_bulk_tab2">
+            <result type="json"></result>
+        </action>
+        <action name="nkn_tab2" class="com.org.controller.Email_registration" method="Nkn_tab2">
+            <result type="json"></result>
+        </action>
+        
+        <!-- GEM Form -->
+        <action name = "email_deact_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/email_deact_preview.jsp</result>             
+        </action>
+        <action name="gem_tab1" class="com.org.controller.Email_registration" method="Gem_tab1">
+            <result type="json"></result>
+        </action>
+        <action name="gem_tab2" class="com.org.controller.Email_registration" method="Gem_tab2">
+            <result type="json"></result>
+        </action>
+        
+        <!-- LDAP Form -->
+        
+        <action name="ldap_tab1" class="com.org.controller.Ldap_registration" method="Ldap_tab1">
+            <result type="json">/WEB-INF/jsps/Ldap_registration.jsp</result>
+        </action>
+        <action name="ldap_tab2" class="com.org.controller.Ldap_registration" method="Ldap_tab2">
+            <result type="json">/WEB-INF/jsps/Ldap_registration.jsp</result>
+        </action>
+        <action name="ldap_tab3" class="com.org.controller.Ldap_registration" method="Ldap_tab3">
+            <result type="json">/WEB-INF/jsps/Ldap_registration.jsp</result>
+        </action> 
+        <action name="ldap_tab4" class="com.org.controller.Ldap_registration" method="Ldap_tab4">
+            <result type="json">/WEB-INF/jsps/Ldap_registration.jsp</result>
+        </action> 
+        <action name="verify_url" class="com.org.controller.Ldap_registration" method="verify_url">
+            <result type="json">/WEB-INF/jsps/Ldap_registration.jsp</result>
+        </action> 
+        
+        <!--- IMAP POP Form -->
+        
+        <action name="imappop_tab1" class="com.org.controller.ImapPop_registration" method="IMAPPOP_tab1">
+            <result type="json">/WEB-INF/jsps/ImapPop_registration.jsp</result>
+        </action>
+         <!-- Mohit Sharma  Move Request-->
+        
+        <action name="getRoll" class="com.org.controller.MoveRequest" method="userRolls">
+            <result type="json"></result>
+        </action>
+        
+        <action name="getRoll2" class="com.org.controller.MoveRequest" method="userRolls2">
+            <result type="json"></result>
+        </action>
+       
+        <action name="changeOfficer" class="com.org.controller.MoveRequest" method="moveRequst">
+            <result type="json"></result>
+        </action>
+        
+        <action name="imappop_tab2" class="com.org.controller.ImapPop_registration" method="IMAPPOP_tab2">
+            <result type="json">/WEB-INF/jsps/ImapPop_registration.jsp</result>
+        </action>
+        
+        <!--- Mobile Form -->
+        <action name="mobile_tab1" class="com.org.controller.Mobile_registration" method="Mobile_tab1">
+            <result type="json">/WEB-INF/jsps/Mobile_registration.jsp</result>
+        </action>
+      
+         <action name="update_mobile_tab1" class="com.org.controller.UpdateMobile_registration" method="update_mobile_tab1">
+             <interceptor-ref name="myStack" />
+            <result type="json"></result>
+        </action>
+        
+        <action name="mobile_tab2" class="com.org.controller.Mobile_registration" method="Mobile_tab2">
+            <result type="json"></result>
+        </action>
+        
+        <!--- DISTRIBUTION LIST Form --> 
+        <action name="dlist_tab1" class="com.org.controller.Dlist_registration" method="DLIST_tab1">
+            <result type="json">/WEB-INF/jsps/Distribution_registration.jsp</result>
+        </action>
+        
+        <action name="dlist_tab2" class="com.org.controller.Dlist_registration" method="DLIST_tab2">
+            <result type="json">/WEB-INF/jsps/Distribution_registration.jsp</result>
+        </action>
+        
+        <action name="fill_dlist_moderator_tab" class="com.org.controller.Dlist_registration" method="fill_dlist_moderator_tab">
+            <result type="json">/WEB-INF/jsps/Distribution_registration.jsp</result>
+        </action>
+        
+        <action name="fill_dlist_owner_tab" class="com.org.controller.Dlist_registration" method="fill_dlist_owner_tab">
+            <result type="json">/WEB-INF/jsps/Distribution_registration.jsp</result>
+        </action>
+        
+        <action name="dlist_tab3" class="com.org.controller.Dlist_registration" method="DLIST_tab3">
+            <result type="json">/WEB-INF/jsps/Distribution_registration.jsp</result>
+        </action>
+        
+        
+        <action name="moderatorDataPost" class="com.org.controller.Dlist_registration" method="moderatorDataPost">
+            <result type="json">
+                <param name="includeProperties">*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+            </result>
+        </action>
+        <action name="singleOwnerDataPost" class="com.org.controller.Dlist_registration" method="singleOwnerDataPost">
+            <result type="json">
+                <param name="includeProperties">*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+            </result>
+        </action>
+        <action name="singleModeratorDataFetch" class="com.org.controller.Dlist_registration" method="singleModeratorDataFetch">
+            <!--  added by pr on 6thsep19 -->
+            <result type="json">
+                <param name="includeProperties">dlistData.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+                <!--
+                <param name="contentType">text/event-stream, charset=UTF-8</param>
+                -->
+            </result>
+        </action>
+        <action name="singleOwnerDataFetch" class="com.org.controller.Dlist_registration" method="singleOwnerDataFetch">
+            <!--  added by pr on 6thsep19 -->
+            <result type="json">
+                <param name="includeProperties">dlistData1.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+                <!--
+                <param name="contentType">text/event-stream, charset=UTF-8</param>
+                -->
+            </result>
+        </action>
+        <action name="singleModeratorDataEditPost" class="com.org.controller.Dlist_registration" method="singleModeratorDataEditPost">
+            <!--  added by pr on 6thsep19 -->
+            <result type="json">
+                <param name="includeProperties">dlistData.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+                <!--
+                <param name="contentType">text/event-stream, charset=UTF-8</param>
+                -->
+            </result>
+        </action>
+        <action name="singleOwnerDataEditPost" class="com.org.controller.Dlist_registration" method="singleOwnerDataEditPost">
+            <!--  added by pr on 6thsep19 -->
+            <result type="json">
+                <param name="includeProperties">dlistData1.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+                <!--
+                <param name="contentType">text/event-stream, charset=UTF-8</param>
+                -->
+            </result>
+        </action>
+        <action name="singleModeratorDataDeletePost" class="com.org.controller.Dlist_registration" method="singleModeratorDataDeletePost">
+            <!--  added by pr on 6thsep19 -->
+            <result type="json">
+                <param name="includeProperties">dlistData.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+                <!--
+                <param name="contentType">text/event-stream, charset=UTF-8</param>
+                -->
+            </result>
+        </action>
+        <action name="singleOwnerDataDeletePost" class="com.org.controller.Dlist_registration" method="singleOwnerDataDeletePost">
+            <!--  added by pr on 6thsep19 -->
+            <result type="json">
+                <param name="includeProperties">dlistData1.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+                <!--
+                <param name="contentType">text/event-stream, charset=UTF-8</param>
+                -->
+            </result>
+        </action>
+        
+<!--         <action name="singleModeratorDataFetchPreview" class="admin.UserTrack" method="singleModeratorDataFetchPreview">
+              added by pr on 6thsep19 
+            <result type="json">
+                <param name="includeProperties">*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+                
+                <param name="contentType">text/event-stream, charset=UTF-8</param>
+                
+            </result>
+        </action>-->
+        
+        <!--- CLOSED DISTRIBUTION LIST Form -->
+        
+        
+        <!-- MOVE- REQUEST START -->
+
+<!--       <action name="move_request" class="com.org.controller.MoveRequest" method="move_request">
+          
+            <result type="json">
+                <param name="includeProperties">*</param>
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+               
+            </result>
+        </action> -->
+        
+        
+        <!-- MOVE REQUEST END -->
+                        
+        
+        
+        
+        
+        
+        
+        
+        
+        <!-- chnage ip Form -->
+        
+        <action name="ip_tab1" class="com.org.controller.Change_ip" method="ip_tab1">
+            <result type="json">/WEB-INF/jsps/Change_ip.jsp</result>
+        </action>
+        <action name="ip_tab2" class="com.org.controller.Change_ip" method="ip_tab2">
+            <result type="json">/WEB-INF/jsps/Change_ip.jsp</result>
+        </action>
+        <action name="ip_tab3" class="com.org.controller.Change_ip" method="ip_tab3">
+            <result type="json">/WEB-INF/jsps/Change_ip.jsp</result>
+        </action>
+        
+        <!-- Relay Form -->
+        
+        
+        <action name="relay_tab1" class="com.org.controller.Relay_registration" method="relay_tab1">
+            <result type="json">/WEB-INF/jsps/Relay_registration.jsp</result>
+        </action>
+        <action name="relay_tab2" class="com.org.controller.Relay_registration" method="relay_tab2">
+            <result type="json">/WEB-INF/jsps/Relay_registration.jsp</result>
+        </action>
+        <action name="relay_tab6" class="com.org.controller.Relay_registration" method="relay_tab6">
+            <result type="json">/WEB-INF/jsps/Relay_registration.jsp</result>
+        </action> 
+        <action name="relay_tab7" class="com.org.controller.Relay_registration" method="relay_tab7">
+            <result type="json">/WEB-INF/jsps/Relay_registration.jsp</result>
+        </action> 
+        <action name="fetchMx" class="com.org.controller.Relay_registration" method="fetchMx">
+            <result type="json">/WEB-INF/jsps/Profile.jsp</result>
+        </action>
+        <action name="filling_relay_tab" class="com.org.controller.Relay_registration" method="filling_relay_tab">
+            <result type="json">/WEB-INF/jsps/Sms_Registration.jsp</result>
+        </action>
+        <action name="checkRelayHardwarePDF" class="com.org.controller.checkFile" method="checkRelayHardwarePDF">
+            <result type="json"></result>
+        </action>
+        
+        <!-- VPN FORM -->
+        <action name="vpn_fatch_renew" class="com.org.controller.Vpn_registration" method="vpn_fatch_renew">	
+            <result name="success" type="json">	
+                <!--<param name="contentType">text/plain</param>-->	
+                /WEB-INF/jsps/Vpn_registration.jsp	
+            </result>	
+        </action>
+        <action name="vpn_check_surender" class="com.org.controller.Vpn_registration" method="vpn_check_surrender">	
+            <result name="success" type="json">	
+                <param name="contentType">text/plain</param>	
+                /WEB-INF/jsps/Vpn_registration.jsp	
+            </result>	
+        </action>	
+        	
+        	
+        <action name="vpn_exist" class="com.org.controller.Vpn_registration" method="vpn_exists">	
+            <result name="success" type="json">	
+                <param name="contentType">text/plain</param>	
+                /WEB-INF/jsps/Vpn_registration.jsp	
+            </result>	
+        </action>
+        <action name="vpn_surrender" class="com.org.controller.Vpn_registration" method="vpn_surrender">	
+            <result type="json">/WEB-INF/jsps/Vpn_registration.jsp</result>	
+        </action>	
+        	
+        <action name="vpn_delete" class="com.org.controller.Vpn_registration" method="vpn_delete">	
+            <result type="json">/WEB-INF/jsps/Vpn_registration.jsp</result>	
+        </action>
+        <action name="vpn_tab1" class="com.org.controller.Vpn_registration" method="vpn_tab1">
+            <result type="json">/WEB-INF/jsps/Vpn_registration.jsp</result>
+        </action>
+        <action name="fill_profile" class="com.org.controller.Vpn_registration" method="fill_profile">
+            <result type="json">/WEB-INF/jsps/Vpn_registration.jsp</result>
+        </action>
+        <action name="vpn_tab2" class="com.org.controller.Vpn_registration" method="vpn_tab2">
+            <result type="json">/WEB-INF/jsps/Vpn_registration.jsp</result>
+        </action>
+        <action name="vpn_tab3" class="com.org.controller.Vpn_registration" method="vpn_tab3">
+            <result type="json">/WEB-INF/jsps/Vpn_registration.jsp</result>
+        </action>
+        <action name="Vpn_registration">
+            <result>/WEB-INF/jsps/Vpn_registration.jsp</result>             
+        </action>
+        <action name="vpn_fatch2" class="com.org.controller.Vpn_registration" method="vpn_fatch">
+            <result name="success" type="json">
+                <!--<param name="contentType">text/plain</param>-->
+                /WEB-INF/jsps/Vpn_registration.jsp
+
+            </result>
+        </action>
+
+        <action name="vpn_check_exp" class="com.org.controller.Vpn_registration" method="vpn_check_exp">
+            <result name="success" type="json">
+                <param name="contentType">text/plain</param>
+                /WEB-INF/jsps/Vpn_registration.jsp
+
+            </result>
+        </action>
+
+        <action name="vpn_renew" class="com.org.controller.Vpn_registration" method="vpn_renew">
+            <result type="json">/WEB-INF/jsps/Vpn_registration.jsp</result>
+        </action>
+        
+        
+        <!-- File upload and download  -->
+        <action name="checkWebcastFile" class="com.org.controller.checkFile" method="checkWebcastFile">
+            <result type="json"></result>
+        </action>
+        <action name="checkPDF" class="com.org.controller.checkFile" method="checkPDF">
+            <result type="json"></result>
+        </action>
+        <action name="checkExcel" class="com.org.controller.checkFile" method="checkExcel">
+            <result type="json"></result>
+        </action>
+        <action name="checkCSV" class="com.org.controller.checkFile" method="checkCSV">
+            <result type="json"></result>
+        </action>
+        
+        <action name="checkCSVForBulk" class="com.org.controller.checkFile" method="checkCSVForBulk">
+            <result type="json"></result>
+        </action>
+        
+        <action name="checkCSVForDNS" class="com.org.controller.checkFile" method="checkCSVForDNS">
+            <result type="json"></result>
+        </action>
+        <action name="checkCert" class="com.org.controller.checkFile" method="checkCert">
+            <result type="json"></result>
+        </action>
+        
+        
+        <!-- end, code added by pr on 12thjun18  -->
+        
+        <!-- TRACK  -->       
+        <action name="TrackDetail" class="admin.UserTrack" method="TrackDetail">
+            <interceptor-ref name="regNumStack" />
+            <result type="json"></result>
+        </action>        
+        <action name="CancelRequest" class="admin.UserTrack" method="CancelRequest">
+            <interceptor-ref name="regNumStack" />
+            <result type="json"></result>
+        </action>                     
+        <action name="preview" class="admin.UserTrack" method="PreviewRequest">
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="json"></result>
+            <!--            <result name="unauthorized">/WEB-INF/jsps/unauthorized.jsp</result>-->
+        </action>        
+        <action name="filterUserTrack" class="admin.UserTrack" method="filter" >            
+            <result name="success">User_status.jsp?flag=filter</result>
+        </action>        
+        <action name="update" class="admin.UserTrack" method="PreviewUpdateRequest1">
+            <interceptor-ref name="regNumStack" />
+            <result type="json">/WEB-INF/jsps/User_status.jsp</result>
+        </action>
+        <action name="sign_cert" class="admin.UserTrack" method="SignCert">
+            <interceptor-ref name="regNumStack" />
+            <result type="json">/WEB-INF/jsps/User_status.jsp</result>
+        </action> 
+        <action name="fetchCert" class="admin.UserTrack" method="fetchCert">
+            <interceptor-ref name="regNumStack" />
+            <result type="json">/WEB-INF/jsps/User_status.jsp</result>
+        </action> 
+        <action name="updatecert" class="admin.UserTrack" method="updatecert">
+            <interceptor-ref name="regNumStack" />
+            <result type="json">/WEB-INF/jsps/User_status.jsp</result>
+        </action> 
+        <action name="approve_ca" class="admin.UserTrack" method="approve_ca">
+            <interceptor-ref name="regNumStack" />
+            <result type="json"></result>
+        </action> 
+        <action name="Firewall_registration">
+            <result>/WEB-INF/jsps/firewall.jsp</result>             
+        </action>
+        
+        
+        <!-- for admin modules-->
+        <action name="action" class="admin.ForwardAction">    
+            <interceptor-ref name="regNumStack" />       
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>                       
+        </action>    
+        
+        <action name="actionAdmin" class="admin.ForwardAction" method="actionAdmin" >           
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>                       
+        </action>                   
+        <action name="rejectAction" class="admin.ForwardAction" method="rejectAction"  >           
+            <interceptor-ref name="regNumStack" />
+            <result>/WEB-INF/jsps/newsupport.jsp</result>          
+        </action>        
+        <action name="fwdToCoordMadmin" class="admin.ForwardAction" method="fwdToCoordMadmin"  >           
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>
+        <action name="checkPreviousReject" class="admin.ForwardAction" method="checkPreviousReject">    
+            <result type="json">
+                <param name="includeProperties">prevrejectdata.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>    
+        </action> <!-- action added by pr on 27thnov19  -->
+        <!--start dash board by dhirendra  -->
+        <action name="showDashBoard" class="admin.DashBoard" method="showDashBoard">            
+            <result>/WEB-INF/jsps/dashboard.jsp</result>
+        </action>
+        
+        <action name="RequestCount" class="admin.DashBoard" method="RequestCount">
+            <result type="json"></result>       
+        </action>
+        
+        <!-- End dash board -->
+                                                                             
+        <action name="admin" class="admin.NewCAHome" method="admin">            
+            <result>/WEB-INF/jsps/newsupport.jsp</result>
+        </action> 
+        
+        <!--        <action name="switchToCorrectPanel" class="admin.Switch">  
+            <result name="success">/WEB-INF/jsps/switch.jsp</result>
+        </action>-->
+         
+        <action name="showLinkData" class="admin.NewCAHome" method="showLinkData" >  
+            <result name="success">/WEB-INF/jsps/newsupport.jsp</result>
+        </action>
+        
+        <action name="rawShowLinkData" class="admin.NewCAHome" method="rawShowLinkData">    
+            <result type="json">
+                <!--                <param name="excludeProperties">sessionMap,pst,reg_no,ca_id,loggedin_email,email,empDetailsHM,supForms,role_head,app_user_type,app_ca_type,skeyword,srole,msg,appType,frm,stat,ip,con,conSlave,userAgent</param>-->
+                <param name="includeProperties">_role,sEcho,sSearch,sColumns,iDisplayStart,iDisplayLength,iColumns,iSortingCols,iSortColumnIndex,sSortDirection,listBeanObj.*,iTotalRecords,iDisplayStart,iDisplayLength,iTotalDisplayRecords,aaData.*,showApprove,showQuery,actype,adminValue,bulkAllUsersdata.*,bulkUsersdata.*,searchdata.*,searchformdata.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>    
+        </action> 
+        <action name="fetchCoordinator" class="admin.ForwardAction" method="fetchCoordinator"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>        
+        <action name="addCoord" class="admin.ForwardAction" method="addCoord"  >           
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                
+        <action name="fetchAdmins" class="admin.ForwardAction" method="fetchAdmins"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                
+        <action name="createID" class="admin.AdminAction" method="createID"  >
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                
+        <action name="fetchPOs" class="admin.AdminAction" method="fetchPOs"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>        
+        <action name="fetchBOs" class="admin.AdminAction" method="fetchBOs"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                
+        <action name="fetchBODomain" class="admin.AdminAction" method="fetchBODomain"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                
+        <action name="fetchBulkUsers" class="admin.NewCAHome" method="fetchBulkUsers"  > <!-- name changed to fetchBulkUsers by pr on 19thaug19 -->
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param> 
+                <param name="includeProperties">bulkUsersdata.*</param><!-- include added by pr on 18thsep19 -->                      
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                        
+        <action name="fetchAllBulkUsers" class="admin.NewCAHome" method="fetchAllBulkUsers"  ><!-- tag added by pr on 28thdec17  -->
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>   
+                <param name="includeProperties">bulkAllUsersdata.*</param><!-- include added by pr on 18thsep19 -->          
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                         
+        <action name="createBulkID" class="admin.AdminAction" method="createBulkID"  >
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                
+        <action name="download"  class="admin.AdminAction" method="export" >
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="error.xls"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="exportIds"  class="admin.AdminAction" method="exportIds" >
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="coordinator.xls"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action><!-- action added by pr on 28thjan2020 -->            
+        <action name="sdownload"  class="admin.AdminAction" method="export" >
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="success.xls"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="bulkdownload"  class="admin.AdminAction" method="export" >
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="all.xls"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action><!--  action added by pr on 2ndapr18  -->        
+        <action name="showUserData" class="admin.UserTrack" method="showUserData">
+            <result name="success">/WEB-INF/jsps/User_status.jsp</result>
+            <result name="error">WEB-INF/jsps/error.jsp</result><!-- these two lines added by pr on 5thfeb18  -->
+            <result name="login">/index.jsp</result>
+        </action> <!-- action modified by pr on 10thjan18  -->   
+        <action name="rawShowUserData" class="admin.UserTrack" method="rawShowUserData" >
+            <result type="json"></result>
+        </action>
+        <action name="resetRandom" class="admin.ForwardAction" method="resetRandom"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action><!-- action added by pr on 3rdjan18  -->                                                                                                               
+        <action name="resetCSRFRandom" class="utility.ResetCSRFRandom" method="resetCSRFRandom"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action><!-- action modified by pr on 19thjan18  --> 
+        <action name="fetchDAs" class="admin.ForwardAction" method="fetchDAs" >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action><!-- action modified by pr on 7thmar18  -->  
+        <action name="addDA" class="admin.ForwardAction" method="addDA"  >           
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action> <!-- action modified by pr on 7thmar18  -->                                                                                                                      
+        <action name="revoke" class="admin.ForwardAction" method="revoke"  >           
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action> <!-- action modified by pr on 7thmar18  -->                                                                                                                
+        <action name="updateBulk" class="admin.AdminAction" method="updateBulk"  >           
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action> <!-- action modified by pr on 7thmar18  --> 
+        <action name="updateBulkUpload" class="admin.AdminAction" method="updateBulkUpload"  >           
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action> <!-- action added by pr on 2ndapr18  --> 
+        <action name="searchStatusByRegNo" class="admin.NewCAHome" method="searchStatusByRegNo"  ><!-- tag added by pr on 28thdec17  -->
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="includeProperties">searchdata.*,empDetailsHM.*,showPullBack</param><!-- include added by pr on 17thsep19 -->
+                <param name="noCache">true</param>                         
+            </result>            
+        </action> 
+        <action name="searchStatusByKeyword" class="admin.NewCAHome" method="searchStatusByKeyword"  ><!-- tag added by pr on 16thaug18 -->
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param> 
+                <param name="includeProperties">searchformdata.*,msg</param><!-- include added by pr on 17thsep19 -->            
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                   
+        <action name="fetchwifivalue" class="admin.AdminAction" method="fetchwifivalue"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action> 
+        <!-- below code added by pr on 31staug18 -->
+        <action name="fetchimapvalue" class="admin.AdminAction" method="fetchimapvalue"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>
+        <!-- below code added by pr on 23rdapr2020 -->
+        <action name="fetchdorpdf" class="admin.AdminAction" method="fetchdorpdf"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>                                                                                                                    
+        <action name="pullBack" class="admin.ForwardAction" method="pullBack"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action><!-- action added by pr on 16thmar18 --> 
+        <action name="rejectBulkID" class="admin.AdminAction" method="rejectBulkID"  >
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action><!-- action added by pr on 4thapr18 -->   
+        <action name="fetchMobileDuplicates" class="admin.AdminAction" method="fetchMobileDuplicates"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action><!-- action added by pr on 4thapr18 -->   
+        <action name="vpb_uploader" class="admin.UserTrack" method="docUploader">
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+            </result>            
+        </action> 
+        <action name="fetchDocCount" class="admin.UserTrack" method="fetchDocUploaderCount" > 
+            <interceptor-ref name="regNumStack" />
+            <result name="success" type="json"> 
+            </result>            
+        </action> 
+        
+        <action name="downloadpdf" class="admin.UserTrack" method="docDownloader">
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+            </result>            
+        </action>    
+       
+        <action name="raiseQuery" class="admin.ForwardAction" method="raiseQuery"  >
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="includeProperties">isSuccess,isError,msg</param>                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action><!-- action added by pr on 6thapr18 -->     
+        <action name="fetchRecps" class="admin.ForwardAction" method="fetchRecps"  >
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action><!-- action added by pr on 9thapr18 --> 
+        <action name="OtpAadhaarAdmin" class="com.org.controller.e_signing" method="OtpAadhaarAdmin">
+            <result type="json"></result>
+        </action>   <!-- action added by pr on 12thapr18  -->        
+        
+        
+        <action name="send_wifi_certificate" class="admin.AdminAction" method="send_wifi_certificate"  ><!--  action added by pr on 7thdec18 for wifi-->
+            <interceptor-ref name="regNumStack" />
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action> 
+        <action name="us_process" class="admin.ForwardAction" method="us_process" ><!-- action added by pr on 7thjan19  -->
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/us_success.jsp</result>            
+        </action>                
+        <action name="fetchAllCount" class="admin.NewCAHome" method="fetchAllCount" ><!-- action added by pr on 19thmar19 -->
+            <result type="json">
+                <param name="root">listBeanObj</param>                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>  
+        </action>  
+        
+        
+       
+        <action name="esignPDF" class="com.org.controller.EsignVerify">
+            <result name="success">/WEB-INF/jsps/esignPDF.jsp</result>
+        </action>
+        
+        
+        <action name="esignPdfRetired" class="com.org.controller.EsignVerify" method="esignPdfForRetiredOfficials">
+            <interceptor-ref name="retired_loginStack" />
+            <result name="success">/WEB-INF/jsps/esignPDF_1.jsp</result>
+        </action>
+        
+        <action name="ESignResponsePage" class="com.org.controller.EsignVerify" method="eSignResponsePage">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/esign.jsp</result>
+            <result name="error" type="redirectAction">showLinkData?adminValue=ca</result>
+            <result name="success1">/WEB-INF/jsps/UpdateMobile.jsp</result>
+        </action>
+        
+        <action name="eSignResponsePageForRetired" class="com.org.controller.EsignVerify" method="eSignResponsePageForRetiredOfficials">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/retired-officers_success.jsp</result>
+            <!--            <result name="success" type="redirectAction">account-extended</result>-->
+            
+        </action>
+        
+        <action name="esignPdfForUpdateMobile" class="com.org.controller.EsignVerifyForUpdateMobile">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/esignPDF.jsp</result>
+        </action>
+      
+		
+        <action name="ESignResponsePageForUpdateMobile" class="com.org.controller.EsignVerifyForUpdateMobile" method="ESignResponsePageForUpdateMobile">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/esign.jsp</result>
+            <result name="error" type="redirectAction">showLinkData?adminValue=ca</result>
+            <result name="success1" type="redirectAction">update-mobile?esign=success1</result>
+        </action>
+           
+        <action name="ConsentAdmin" class="com.org.controller.e_signing" method="ConsentAdmin">
+            <result type="json"></result>
+        </action>  
+        
+        <action name = "daonboarding_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/daonboarding_preview.jsp</result>             
+        </action>    
+        
+        <action name="dor_ext_preview">
+            <interceptor-ref name="myStack"/>
+            <result name="success">/WEB-INF/jsps/include/dor_ext_preview.jsp</result>
+        </action>
+        <action name="dor_ext_preview_retired">
+            <interceptor-ref name="myStack"/>
+            <result name="success">/WEB-INF/jsps/include/dor_ext_preview_retired.jsp</result>
+        </action>
+        
+                 
+        <action name = "sms_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/sms_preview.jsp</result>             
+        </action>
+        <action name = "dns_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/dns_preview.jsp</result>             
+        </action>
+        <action name = "old_dns_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/old_dns_preview.jsp</result>             
+        </action>
+        <action name = "wifi_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/wifi_preview.jsp</result>             
+        </action>
+        <action name = "single_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/single_preview.jsp</result>             
+        </action>
+        <action name = "ldap_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/ldap_preview.jsp</result>             
+        </action>
+        <action name = "imappop_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/imappop_preview.jsp</result>             
+        </action>
+        <action name = "mobile_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/mobile_preview.jsp</result>             
+        </action>
+        <action name = "nkn_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/nkn_preview.jsp</result>             
+        </action>
+        <action name = "gem_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/gem_preview.jsp</result>             
+        </action>
+        
+        
+        
+        <action name = "move_request1">
+            <!--            <interceptor-ref name="myStack" />   -->
+            <result name="success">/WEB-INF/jsps/move_request.jsp</result>             
+        </action>
+        
+        
+        <action name = "bulk_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/bulk_preview.jsp</result>             
+        </action>
+        <action name = "distribution_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/distribution_preview.jsp</result>             
+        </action>
+        <action name = "bulk_distribution_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/bulk_distribution_preview.jsp</result>             
+        </action> 
+        <action name = "relay_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/relay_preview.jsp</result>             
+        </action>
+        <action name = "relay_preview_old">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/relay_preview_old.jsp</result>             
+        </action>
+        <action name = "ip_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/change_ip_preview.jsp</result>             
+        </action>
+        <action name = "vpn_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/vpn_preview.jsp</result>             
+        </action>
+        <action name = "webcast_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/webcast_preview.jsp</result>             
+        </action>
+        <action name = "firewall_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/firewall_preview.jsp</result>             
+        </action>
+        <action name = "wifiport_preview">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/include/wifiport_preview.jsp</result>             
+        </action>
+        <action name="checkUSOTP" class="admin.ForwardAction" method="checkUSOTP"  ><!--  action added by pr on 29thapr19-->
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>
+        <action name="resendUSOTP" class="admin.ForwardAction" method="resendUSOTP"  ><!--  action added by pr on 29thapr19-->
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>
+        <action name="us_mid_process" class="admin.ForwardAction" method="us_mid_process" ><!-- action added by pr on 29thapr19  -->
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/us_mid_process.jsp</result>            
+        </action>
+        <action name="fetchEmpType" class="admin.ForwardAction" method="fetchEmpType"  ><!--  action added by pr on 1stmay19  -->
+            <result type="json">                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>
+        <action name="fetchIP" class="com.org.controller.Dns_registration" method="fetchIP">
+            <result type="json">/WEB-INF/jsps/Dns_Registration.jsp</result>
+        </action>
+        <action name="putOnHold" class="admin.ForwardAction" method="putOnHold"  ><!--  action added by pr on 6thaug19 -->
+            <interceptor-ref name="regNumStack" />
+            <result type="json">
+                <param name="includeProperties">isSuccess,isError,msg</param>                        
+                <param name="excludeNullProperties">true</param>             
+                <param name="noCache">true</param>                         
+            </result>            
+        </action>      
+        <!-- VPN FORM ADMIN PANEL -->
+        <action name="getVpnData" class="admin.NewCAHome" method="getVpnData"><!-- // added by nikki on 26thjun2019  -->
+            <result type="json">
+                <param name="excludeNullProperties">true</param>
+                <param name="noCache">true</param>
+            </result>
+        </action>
+        <action name="vpn_entry_edit" class="com.org.controller.Vpn_registration" method="vpn_entry_edit">
+            <result type="json">/WEB-INF/jsps/Vpn_registration.jsp</result>
+        </action>
+        <!-- VPN FORM ADMIN PANEL -->    
+        <action name="exportData"  class="admin.NewCAHome" method="exportData" ><!-- action added by pr on 30thjul19  -->
+            <result name="success" type="stream">
+                <param name="contentType">application/octet-stream</param>
+                <param name="inputName">fileInputStream</param>
+                <param name="contentDisposition">attachment;filename="data.xls"</param>
+                <param name="bufferSize">1024</param>
+            </result>
+        </action>
+        <action name="fetchRemarks" class="admin.ForwardAction" method="fetchRemarks" > <!--  added by pr on 23rdaug19 -->   
+            <result type="json">
+                <param name="includeProperties">statRemarks</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>    
+        </action> 
+             
+        <!-- VPN FORM ADMIN PANEL -->      
+        <action name="verify_newmobile_code" class="com.org.controller.LoginAction" method="verify_newmobile_code">
+            <interceptor-ref name="myStack" />
+            <result type="json">
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers
+                </param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param>
+            </result>
+        </action> 
+      
+        <action name="Otpgen_newmobile" class="com.org.controller.LoginAction" method="Otpgen_newmobile">
+            <interceptor-ref name="myStack" />
+            <result type="json">
+                <param name="excludeProperties">
+                    userValues.password,userValues.dashboardUsagePrivilege,userValues.hasMultipleMobileNumbers
+                </param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>  
+       
+        <action name="sendOtp" class="com.org.controller.LoginAction" method="sendOtp">
+            <result type="json"></result>
+        </action> 
+        
+        
+        <!-- Track URL Strat -->   
+        <action name="fetchTrackAll" class="admin.NewCAHome" method="fetchTrackAll" > <!--  added by pr on 22ndaug19 -->   
+            <interceptor-ref name="regNumStack" />
+            <result type="json">
+                <param name="includeProperties">hmTrack.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>    
+        </action>   
+        <action name="fetchTrackByRole" class="admin.NewCAHome" method="fetchTrackByRole" > <!--  added by pr on 22ndaug19 --> 
+            <interceptor-ref name="regNumStack" />  
+            <result type="json">
+                <param name="includeProperties">hmTrack.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>    
+        </action> 
+        <action name="settingSessionCount" class="admin.NewCAHome" method="settingSessionCount" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">finalMap.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>    
+        </action>                                                                                                                                                                                                                                                   
+        <!-- Track URL End -->   
+        <!-- Feedback URL Start -->                                                                                                                        
+        <!-- Feedback URL End -->        
+        <action name="fetchDomain" class="com.org.controller.Dns_registration" method="fetchDomain">
+            <result type="json">/WEB-INF/jsps/Dns_Registration.jsp</result>
+        </action>  
+        <action name="fetchIP" class="com.org.controller.Dns_registration" method="fetchIP">
+            <result type="json">/WEB-INF/jsps/Dns_Registration.jsp</result>
+        </action>    
+        <!--- WEBCAST LIST Form --> 
+        <action name="webcast_tab1" class="com.org.controller.Webcast_registration" method="Webcast_tab1">
+            <result type="json">/WEB-INF/jsps/Webcast_registration.jsp</result>
+        </action>
+        <action name="webcast_tab2" class="com.org.controller.Webcast_registration" method="Webcast_tab2">
+            <result type="json">/WEB-INF/jsps/Webcast_registration.jsp</result>
+        </action>
+        <action name="Firewall_tab1" class="com.org.controller.Firewall_registration" method="Firewall_tab1">
+            <interceptor-ref name="defaultStack"/>
+            <interceptor-ref name="json">
+                <param name="enableSMD">true</param>
+            </interceptor-ref>
+            <result type="json"></result>
+        </action>  
+        
+        <action name="Firewall_tab2" class="com.org.controller.Firewall_registration" method="Firewall_tab2">
+            <result type="json"></result>
+        </action> 
+        <action name="fetchFirewallUsers" class="com.org.controller.Firewall_registration" method="fetchFirewallUsers">
+            <result type="json"></result>
+        </action>
+       
+        <action name="wifiport_tab1" class="com.org.controller.Wifiport_registration" method="Wifiport_tab1">
+            <interceptor-ref name="defaultStack"/>
+            <interceptor-ref name="json">
+                <param name="enableSMD">true</param>
+            </interceptor-ref>
+            <result type="json"></result>
+        </action>  
+        <action name="wifiport_tab2" class="com.org.controller.Wifiport_registration" method="Wifiport_tab2">
+            <result type="json"></result>
+        </action> 
+        <!--        <action name="fetchWifiportUsers" class="com.org.controller.Wifiport_registration" method="fetchWifiportUsers">
+            <result type="json"></result>
+        </action>-->
+        
+        <action name="eforms-faqs" class="com.org.controller.Feedback" method="eformsFaqs">
+            <result type="json"></result>
+            <interceptor-ref name="myStack" />
+            <param name="includeProperties">srch_faq</param>
+            <param name="excludeNullProperties">true</param>        
+            <param name="noCache">true</param> 
+            <result name="success">/WEB-INF/jsps/eforms-faqs.jsp</result>  
+        </action>
+        <action name="eformsManual">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/e_manual.jsp</result>
+        </action>
+        <action name="update-mobile">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/UpdateMobile.jsp</result>
+        </action>
+        
+        <!-- UPDATE COORDINATOR BY NIKKI 17 DEC 2019 -->
+        <action name="updateCO" class="admin.UpdateCO">            
+            <result>/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="updateCO_getdata" class="admin.UpdateCO" method="updateCO_getdata">            
+            <result  type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="getCaValues" class="admin.UpdateCO" method="getCaValues">            
+            <result  type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="add_coordinator" class="admin.UpdateCO" method="add_coordinator">            
+            <result  type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="check_otherdept" class="admin.UpdateCO" method="check_otherdept">            
+            <result  type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="updateCO_getCOdata" class="admin.UpdateCO" method="updateCO_getCOdata">            
+            <result  type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="update_coordinator" class="admin.UpdateCO" method="update_coordinator">            
+            <result  type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="update_ministry" class="admin.UpdateCO" method="update_ministry">            
+            <result  type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="update_dept" class="admin.UpdateCO" method="update_dept">            
+            <result  type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="updateCO_deleteCO" class="admin.UpdateCO" method="updateCO_deleteCO">
+            <result type="json">/WEB-INF/jsps/updateCO.jsp</result>
+        </action>
+        <action name="feedback_us" class="com.org.controller.Feedback" method="feedback_us">
+            <interceptor-ref name="myStack" />
+            <result type="json"></result>
+        </action>
+        <action name="fetchDomainData" class="com.org.controller.Email_registration" method="fetchDomainData">
+            <result type="json">
+                <param name="includeProperties">allowedDomains.*,formTypeDor.*,loggedInEmail.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        <action name="fetchDomainDataforApplicant" class="com.org.controller.Email_registration" method="fetchDomainDataforApplicant">
+            <result type="json">/WEB-INF/jsps/Dns_Registration.jsp</result>
+        </action>
+        
+        <action name="fetchEmailCampaigns" class="com.org.controller.Email_registration" method="fetchEmailCampaigns" > <!--  added by pr on 6thsep19 -->   
+            <result name="success" type="json">
+                <param name="includeProperties">campaigns.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        
+        <action name="fetchCompleteCampaignData" class="com.org.controller.Dns_registration" method="fetchCompleteCampaignData" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        
+        <action name="fetchEmailCampaignData" class="com.org.controller.Email_registration" method="fetchEmailCampaignData" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        
+        <action name="EmailCampaignData" class="com.org.controller.Email_registration" method="EmailCampaignData" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">emailbulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        <action name="EmaildiscardCampaign" class="com.org.controller.Email_registration" method="EmaildiscardCampaign" > <!--  added by pr on 6thsep19 -->   
+            <result name="success" type="json">
+                <!--                <param name="includeProperties">EmailbulkDataStr</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> -->
+            </result>
+        </action>
+        
+        <action name="bulkEmailDataEdit" class="com.org.controller.Email_registration" method="bulkDataEdit" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>    
+        </action>
+        <action name="bulkEmailDataEditPost" class="com.org.controller.Email_registration" method="bulkEmailDataEditPost" > <!--  added by pr on 6thsep19 -->   
+            <result name="success" type="json">
+                <param name="includeProperties">bulkData.*,emailEditData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+            <result name="error" type="json">
+                <param name="includeProperties">emailEditData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>    
+        </action>
+        
+        <action name="bulkEmailDataDelete" class="com.org.controller.Email_registration" method="bulkDataDelete" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>
+        </action>
+        
+        
+        <!--  Coordinator List Start -->
+        <action name="coordinator-list" class="com.org.controller.Profile" method="fetchCoordinator">
+            <result name="success">/WEB-INF/jsps/coordinator_list.jsp</result>
+        </action>
+        <action name="fetchCoordinator-list" class="com.org.controller.Profile" method="fetchCoordinator">
+            <result type="json">
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        <action name="bulkDnsDataDelete" class="com.org.controller.Dns_registration" method="bulkDataDelete" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>
+        </action>
+        <action name="bulkDnsDataEdit" class="com.org.controller.Dns_registration" method="bulkDataEdit" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>    
+        </action>
+        <action name="bulkDnsDataEditPost" class="com.org.controller.Dns_registration" method="bulkDnsDataEditPost" > <!--  added by pr on 6thsep19 -->   
+            <result name="success" type="json">
+                <param name="includeProperties">bulkData.*,dnsEditData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>
+            <result name="error" type="json">
+                <param name="includeProperties">dnsEditData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>    
+        </action>
+        <action name="singleDnsDataPost" class="com.org.controller.Dns_registration" method="singleDnsDataPost" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">dnsEditData.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>
+        </action>
+        <action name="singleDnsDataEditPost" class="com.org.controller.Dns_registration" method="singleDnsDataEditPost" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">dnsEditData.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>
+        </action>
+        <action name="singleDnsDataFetch" class="com.org.controller.Dns_registration" method="singleDnsDataFetch" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">dnsEditData.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>
+        </action>
+        <action name="singleDnsDataDeletePost" class="com.org.controller.Dns_registration" method="singleDnsDataDeletePost" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">dnsEditData.*, bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+                <!--<param name="contentType">text/event-stream, charset=UTF-8</param>-->
+            </result>
+        </action>
+        <action name="fetchOpenCampaigns" class="com.org.controller.Dns_registration" method="fetchOpenCampaigns" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">campaigns.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        <action name="fetchCompleteCampaignData" class="com.org.controller.Dns_registration" method="fetchCompleteCampaignData" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        <action name="fetchCampaignData" class="com.org.controller.Dns_registration" method="fetchCampaignData" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        <action name="discardCampaign" class="com.org.controller.Dns_registration" method="discardCampaign" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">bulkDataStr</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        <action name="fetchSuccessRecord" class="com.org.controller.Dns_registration" method="fetchSuccessRecord" > <!--  added by pr on 6thsep19 -->   
+            <result type="json">
+                <param name="includeProperties">bulkData.*</param>
+                <param name="excludeNullProperties">true</param>        
+                <param name="noCache">true</param> 
+            </result>
+        </action>
+        <action name="fetchUrCoord" class="com.org.controller.Profile" method="fetchUrCoord" > <!--  added by pr on 6thsep19 -->   
+            <result type="json"></result>
+        </action>
+
+        <action name="dlistBulkSubmission" class="com.org.controller.Dlist_registration" method="Bulk_tab1">
+            <result type="json"></result>
+        </action>
+        <action name="dlistBulkSubmission2" class="com.org.controller.Dlist_registration" method="Dlist_Bulk_tab2">
+            <result type="json"></result>
+        </action>
+        <action name="dLIST_Bulktab" class="com.org.controller.Dlist_registration" method="DLIST_Bulktab">
+            <result type="json">/WEB-INF/jsps/Distribution_registration.jsp</result>
+        </action> 
+        <!--  Coordinator List Start -->
+        <!-- UPDATE COORDINATOR BY NIKKI 17 DEC 2019 -->
+
+        
+        <action name="fetchMx" class="com.org.controller.Relay_registration" method="fetchMx">
+            <result type="json">/WEB-INF/jsps/Profile.jsp</result>
+        </action>
+        
+        <action name="checkRelayHardwarePDF" class="com.org.controller.checkFile" method="checkRelayHardwarePDF">
+            <result type="json"></result>
+        </action>
+        
+        <!--Added for SSO-->
+        <action name="parichay_login" class="com.org.ssologin.LoginParichay" >
+            <result type="json"></result>
+        </action>
+        
+        <action name="ssologin" class="com.org.ssologin.SsoAuth" method="authUser">
+            <result type="redirect">showUserData</result>
+            <!--            <result type="json"></result>-->
+        </action> 
+        
+        <action name = "support_parichay" class = "com.org.controller.LogoutAction" method="support_parichay">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "ca_parichay" class = "com.org.controller.LogoutAction" method="ca_parichay">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "logout_parichay" class = "com.org.controller.LogoutAction" method="parichayLogout">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "logout_parichay_retired" class = "com.org.controller.LogoutAction" method="parichayLogoutForRetiredOfficials">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "verify_yourself">    
+            <interceptor-ref name="retired_loginStack" />
+            <result name="success">/WEB-INF/jsps/retired-officers.jsp</result>             
+        </action>
+        
+        <action name = "account-extended" class = "com.org.controller.LogoutAction" method="parichayLogoutForRetiredOfficials">    
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/retired-officers.jsp</result>             
+        </action>
+        
+        <action name = "rerror3" class = "com.org.controller.LogoutAction" method="parichayLogoutForRetiredOfficials1">    
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/retired_session_expired.jsp</result>            
+        </action>
+        
+        <!--        <action name = "rerror" class = "com.org.controller.LogoutAction" method="parichayLogoutForRetiredOfficials">    
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/retired_bo_not_available.jsp</result>            
+        </action>-->
+        
+        <!--        <action name = "rerror" class = "com.org.controller.Email_registration" method="shareDaDetailsForRetiredEmployees">    
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/retired_bo_not_available.jsp</result>            
+        </action>-->
+        <action name="rerror" class = "com.org.controller.Email_registration" method="shareDaDetailsForRetiredEmployees">
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/retired_bo_not_available.jsp</result>
+        </action>
+        <action name="retired-employee-service" class = "com.org.controller.Email_registration" method="shareDaDetailsForRetiredEmployees">
+            <interceptor-ref name="myStack" />
+            <result type="json">
+                <param name="includeProperties">jsonStr</param> 
+            </result>      
+        </action>       
+        <action name = "rerror1" class = "com.org.controller.LogoutAction" method="parichayLogoutForRetiredOfficials">    
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/retired_30_days.jsp</result>             
+        </action>
+        
+        <action name = "rerror2" class = "com.org.controller.LogoutAction" method="parichayLogoutForRetiredOfficials">    
+            <interceptor-ref name="myStack" />
+            <result name="success">/WEB-INF/jsps/retired_expired.jsp</result>             
+        </action>
+        
+        <!--COOPANNEL-->
+        
+        <!-- Begin:: CoordinatorPannel by Gaurav -->
+        <action name = "cooPannel">
+            <result>/WEB-INF/jsps/Coordinator_pannel.jsp</result>            
+        </action>
+        <action name = "cooPannelRo">
+            <result>/WEB-INF/jsps/Coordinator_pannel_ro.jsp</result>            
+        </action>
+        <!-- End:: CoordinatorPannel by Gaurav -->
+        
+        <!-- Begin:: Coordinator fetch and delete Sourcecode by Satya-->
+        <action name="viewAllCoordinators" class="com.org.controller.CoordinatorPanelController" method="viewAllCoordinators">
+            <result type="json">
+                <param name="includeProperties">jsonStr,jsonStr_new_categories</param>           
+            </result>
+        </action>
+        
+        
+        <action name="deleteCoordinatorById" class="com.org.controller.CoordinatorPanelController" method="deleteCoordinatorById">
+            <result type="json">                  
+                <param name="includeProperties">jsonStr</param>      
+            </result>
+        </action>
+        
+        <action name="viewCoordinatorsById" class="com.org.controller.CoordinatorPanelController" method="viewCoordinatorsById">
+            <result type="json">                
+                <param name="includeProperties">jsonStr</param>              
+            </result>
+        </action>
+        
+        <action name="insertCoordinatorTable" class="com.org.controller.CoordinatorPanelController" method="insertCoordinatorTable">
+          
+            <result type="json">                
+                <param name="includeProperties">jsonStr</param>         
+            </result>
+           
+        </action>
+        
+        
+        <action name="updateCoordinator" class="com.org.controller.CoordinatorPanelController" method="updateCoordinator">
+            <result type="json">              
+                <param name="includeProperties">jsonStr</param>     
+            </result>
+        </action>
+        
+        <action name="getMinWisePendingReqCoord" class="com.org.controller.CoordinatorPanelController" method="getMinWisePendingReqCoord">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="getMinWiseCompletedReqCoord" class="com.org.controller.CoordinatorPanelController" method="getMinWiseCompletedReqCoord">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        
+        <action name="trackRequestByHOG" class="com.org.controller.CoordinatorPanelController" method="trackRequestByHOG">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        
+        <action name="updateDepartmentHOG" class="com.org.controller.CoordinatorPanelController" method="updateDepartmentHOG">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="updateDepartmentPendingRequestById" class="com.org.controller.CoordinatorPanelController" method="updateDepartmentPendingRequestById">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="viewDepartmentPendingRequestById" class="com.org.controller.CoordinatorPanelController" method="viewDepartmentPendingRequestById">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="showDepartmentPendingRequest" class="com.org.controller.CoordinatorPanelController" method="showDepartmentPendingRequest">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="approveDepartment" class="com.org.controller.CoordinatorPanelController" method="approveDepartment">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        
+        <action name="getCountsRequestCoordinator" class="com.org.controller.CoordinatorPanelController" method="getCountsRequestCoordinator">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        
+        <action name="getPendingRequestOfHog" class="com.org.controller.CoordinatorPanelController" method="getPendingRequestOfHog">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+                
+        <action name="getPendingRequestOfCoordinator" class="com.org.controller.CoordinatorPanelController" method="getPendingRequestOfCoordinator">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="getCompletedRequestOfCoordinator" class="com.org.controller.CoordinatorPanelController" method="getCompletedRequestOfCoordinator">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+            
+        <action name="getForwardedRequestOfCoordinator" class="com.org.controller.CoordinatorPanelController" method="getForwardedRequestOfCoordinator">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="getRejectedRequestOfCoordinator" class="com.org.controller.CoordinatorPanelController" method="getRejectedRequestOfCoordinator">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        
+        
+        <!--           <action name="checkCoordinator" class="com.org.controller.CoordinatorPanelController" method="checkCoordinator">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>-->
+        
+        
+        <action name="getCategoryHOG" class="com.org.controller.CoordinatorPanelController" method="getCategoryHOG">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="getCategoryMinistryHOG" class="com.org.controller.CoordinatorPanelController" method="getCategoryMinistryHOG">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+          
+        <action name="getCategoryMinistryDepartmentHOG" class="com.org.controller.CoordinatorPanelController" method="getCategoryMinistryDepartmentHOG">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="addDepartmentHOG" class="com.org.controller.CoordinatorPanelController" method="addDepartmentHOG">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="rejectRequestHog" class="com.org.controller.CoordinatorPanelController" method="rejectRequestHog">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        
+        
+        <action name="pullbackAllRequestHog" class="com.org.controller.CoordinatorPanelController" method="pullbackAllRequestHog">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        
+        <action name="pullbackRequestHog" class="com.org.controller.CoordinatorPanelController" method="pullbackRequestHog">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="moveRequestsToSelectedCoord" class="com.org.controller.MoveRequest" method="moveRequestsToSelectedCoord">
+            <result type="json">
+                <param name="includeProperties">success.*</param>
+            </result>
+        </action>
+        <action name="fetchEmploymentDetailsOfCoord" class="com.org.controller.MoveRequest" method="fetchEmploymentDetailsOfCoord">
+            <result type="json">
+                <param name="includeProperties">listEmpCategoryMinistryDept.*</param>
+            </result>
+        </action>
+        <action name="fetchRequestsOfCoordAndShowValidCoords" class="com.org.controller.MoveRequest" method="fetchRequestsOfCoordAndShowValidCoords">
+            <result type="json">
+                <param name="includeProperties">coordinatorEmailsFromCoordinatorEmail.*,pendingCoordinatorRequests.*</param>
+            </result>
+        </action>
+        <action name="realMoveRequest" class="com.org.controller.MoveRequest" method="realMoveRequest">
+            <result type="json"></result>
+        </action>
+        
+        <action name="changeOfficer" class="com.org.controller.MoveRequest" method="moveRequst">
+            <result type="json"></result>
+        </action>
+        
+        <action name="approveAllRequestHog" class="com.org.controller.CoordinatorPanelController" method="approveAllRequestHog">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+                
+        
+        <action name="approveRequestHog" class="com.org.controller.CoordinatorPanelController" method="approveRequestHog">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+                
+
+
+
+        <action name="previewRequest" class="com.org.controller.CoordinatorPanelController" method="previewRequest">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        
+        
+        <action name="getMinistryInfoOfHOG" class="com.org.controller.CoordinatorPanelController" method="getMinistryInfoOfHOG">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        
+        <action name="rejectDepartment" class="com.org.controller.CoordinatorPanelController" method="rejectDepartment">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="registerHOG" class="com.org.controller.CoordinatorPanelController" method="hogRegistration">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="getAllCategoryMinistry" class="com.org.controller.CoordinatorPanelController" method="getAllCategoryMinistry">
+            <result type="json">
+                <param name="includeProperties">jsonStr,jsonStr_new_categories,jsonStr_new_ministries</param>
+            </result>
+        </action>
+        
+        
+        <!-- End Coordinator Sourcecode by Satya-->
+        
+        
+        
+        <!--RO Panel by Satya -->
+        <action name="viewAllRo" class="com.org.controller.CoordinatorPanelController" method="viewAllRo">
+            <result type="json">
+                <param name="includeProperties">jsonStr</param>  
+            </result>
+        </action>
+        
+        <action name="deleteRoById" class="com.org.controller.CoordinatorPanelController" method="deleteRoById">
+            <result type="json">              
+                <param name="includeProperties">jsonStr</param>  
+            </result>
+        </action>
+        
+         
+        <action name="viewRoId" class="com.org.controller.CoordinatorPanelController" method="viewRoId">
+            <result type="json">              
+                <param name="includeProperties">jsonStr</param>
+            </result>
+        </action>
+        
+        <action name="insertRoTable" class="com.org.controller.CoordinatorPanelController" method="insertRoTable">
+            <result type="json">                
+                <param name="includeProperties">jsonStr</param>          
+            </result>
+        </action>
+        
+        <action name="updateRo" class="com.org.controller.CoordinatorPanelController" method="updateRo">
+            <result type="json">                  
+                <param name="includeProperties">jsonStr</param>  
+            </result>
+        </action>
+        
+      
+        
+        <!--EO COOPANNEL-->
+        
+
+        <!--Added for SSO-->
+        <action name="parichay_login" class="com.org.ssologin.LoginParichay" >
+            <result type="json"></result>
+        </action>
+        
+        <action name = "ssosessionout_parichay" class = "com.org.controller.LogoutAction" method="ssoSessionoutPari">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "ssosessionoutretired_parichay" class = "com.org.controller.LogoutAction" method="ssoSessionoutPariRetired">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "coordinator_parichay" class = "com.org.controller.LogoutAction" method="coordinator_parichay">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "admin_parichay" class = "com.org.controller.LogoutAction" method="admin_parichay">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "logout_parichay" class = "com.org.controller.LogoutAction" method="parichayLogout">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "fetchString_parichay" class = "com.org.controller.LogoutAction" method="parichayFetchString">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "fetchStringretired_parichay" class = "com.org.controller.LogoutAction" method="parichayFetchStringRetired">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "failedredirect_parichay" class = "com.org.controller.LogoutAction" method="failedredirect">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <action name = "failedredirectretired_parichay" class = "com.org.controller.LogoutAction" method="failedredirectRetired">    
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">loginNow</result>             
+        </action>
+        
+        <!--        
+          <action name = "encodeURI" class = "admin.UserTrack" method="encodeURI">    
+           <result type="json"></result>
+        </action>-->
+        
+        <action name="fetchBoName" class="com.org.controller.DaOnboarding" method="fetchBoName">
+            <result type="json"></result>
+        </action>
+
+        <action name="daOnboarding_tab1" class="com.org.controller.DaOnboarding" method="daOnboardin_tab1">
+            <result type="json"></result>
+        </action>
+        
+        <action name="daOnboarding_tab2" class="com.org.controller.DaOnboarding" method="daOnboardin_tab2">
+            <result type="json"></result>
+        </action>
+        
+        <action name="checkRefreshFlag" class="com.org.controller.LoginAction" method="checkRefreshFlag">
+            <result type="json">
+                <param name="includeProperties">refreshFlag</param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="fetchSwitchUrl" class="com.org.controller.LoginAction" method="fetchSwitchUrl">
+            <result type="json">
+                <param name="includeProperties">switchUrl</param>
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+        
+        <action name="retired-officers" class="com.org.controller.ValidateRetiredEmployee" method="validateRetiredBo">
+            <interceptor-ref name="myStack" />
+            <result name="success" type="redirectAction">verify_yourself</result>
+            <result name="error" type="redirectAction">rerror</result>
+            <result name="error1" type="redirectAction">rerror1</result>
+            <result name="error2" type="redirectAction">rerror2</result>
+            <result name="error3" type="redirectAction">rerror3</result>
+        </action>
+        
+    </package>
+
+</struts>

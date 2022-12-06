@@ -1,0 +1,406 @@
+<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+    <filter>
+        <filter-name>struts2</filter-name>
+        <filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter</filter-class>
+        <init-param>
+            <param-name>struts.enable.DynamicMethodInvocation</param-name>
+            <param-value>false</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>struts2</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>CSRFPrevention</filter-name>
+        <filter-class>org.apache.catalina.filters.CsrfPreventionFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>ExpiresFilter</filter-name>
+        <filter-class>org.apache.catalina.filters.ExpiresFilter</filter-class>
+        <init-param>
+            <param-name>ExpiresByType image</param-name>
+            <param-value>access plus 1 year</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType text/css</param-name>
+            <param-value>access plus 1 month</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType application/javascript</param-name>
+            <param-value>access plus 1 month</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType application/x-javascript</param-name>
+            <param-value>access plus 1 month</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresByType application/x-shockwave-flash</param-name>
+            <param-value>access plus 1 month</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ExpiresDefault</param-name>
+            <param-value>access plus 2 days</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>ExpiresFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
+    <!--SMS-->
+    <context-param>
+        <param-name>sms-ip</param-name>
+        <param-value>smsgw.sms.gov.in</param-value>
+    </context-param>
+    <context-param>
+        <param-name>sms-pass</param-name>
+        <param-value>OnlineForms@#456</param-value>
+    </context-param>
+    <context-param>
+        <param-name>sms-uname</param-name>
+        <param-value>onlineforms.sms</param-value>
+    </context-param>
+    <!--SMS-->
+
+    <!--DATABASE-->
+    <context-param>
+        <param-name>db-host</param-name>
+        <param-value>192.168.1.102:3306</param-value>
+    </context-param>
+    <context-param>
+        <param-name>db-user</param-name>
+        <param-value>root</param-value>
+    </context-param>
+    <context-param>
+        <param-name>db-name</param-name>
+        <param-value>onlineform</param-value>
+    </context-param>
+    <context-param>
+        <param-name>db-pass</param-name>
+        <param-value>@Forms@123</param-value>
+    </context-param>
+    <!--DATABASE-->
+
+
+
+    <!--          DATABASE SLAVE -->
+    <context-param>
+        <param-name>db-host-slave</param-name>
+        <param-value>192.168.1.100:3306</param-value>
+    </context-param>
+    <context-param>
+        <param-name>db-user-slave</param-name>
+        <!--<param-value>root</param-value>-->
+        <param-value>slave_user</param-value>
+    </context-param>
+    <context-param>
+        <param-name>db-name-slave</param-name>
+        <param-value>onlineform</param-value>
+    </context-param>
+    <context-param>
+        <param-name>db-pass-slave</param-name>
+        <!--<param-value>@Forms@123</param-value>-->
+        <param-value>Slave#$%123</param-value>
+    </context-param>
+    <!-- DATABASE SLAVE -->
+
+    <!--  DATABASE SLAVE 
+     <context-param>
+         <param-name>db-host-slave</param-name>
+         <param-value>mysql-slavedb.nic.in:3306</param-value>
+     </context-param>
+     <context-param>
+         <param-name>db-user-slave</param-name>
+         <param-value>app_user</param-value>
+     </context-param>
+     <context-param>
+         <param-name>db-name-slave</param-name>
+         <param-value>onlineform</param-value>
+     </context-param>
+     <context-param>
+         <param-name>db-pass-slave</param-name>
+         <param-value>root@123</param-value>
+     </context-param>
+    DATABASE SLAVE -->
+ 
+    <context-param>
+        <param-name>allServicesPdfLocation</param-name>
+        <param-value>/eForms/PDF/</param-value>
+    </context-param>
+    <context-param>
+        <param-name>multipleUploadPdfLocation</param-name>
+        <param-value>/eForms/DocPDF/</param-value>
+    </context-param>
+    <context-param>
+        <param-name>rawPdfLocation</param-name>
+        <param-value>/eForms/PDF/</param-value>
+    </context-param>
+    <context-param>
+        <param-name>signedPdfLocation</param-name>
+        <param-value>/eForms/AppPDF/</param-value>
+    </context-param>
+    <context-param>
+        <param-name>retiredOfficersPdfLocation</param-name>
+        <param-value>/eForms/PDF/retired/</param-value>
+    </context-param>
+    <context-param>
+        <param-name>excelLocation</param-name>
+        <param-value>/eForms/Excel/</param-value>
+    </context-param>
+    
+ 
+
+    <!--MAIL-->
+    <context-param>
+        <param-name>send-mail</param-name>
+        <param-value>mail.nic.in</param-value>
+    </context-param>
+    <context-param>
+        <param-name>send-mail-from</param-name>
+        <param-value>eforms@nic.in</param-value>
+    </context-param>
+    <!--MAIL-->
+
+
+    <!--LDAP-->
+    <context-param>
+        <param-name>ctx-factory</param-name>
+        <param-value>com.sun.jndi.ldap.LdapCtxFactory</param-value>
+    </context-param>
+    <context-param>
+        <param-name>provider-url</param-name>
+        <!--<param-value>ldap://auths.nic.in:389</param-value>-->
+        <param-value>ldap://auths.nic.in:389 ldap://auths2.nic.in:389</param-value>
+     </context-param>
+
+    <context-param>
+        <param-name>provider-url-slave</param-name>
+        <param-value>ldap://auths-slave1.nic.in:389 ldap://auths-slave2.nic.in:389</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>bind-dn</param-name>
+        <param-value>uid=eforms.auth,ou=People,o=inoc services,o=Application Services,o=nic.in,dc=nic,dc=in</param-value>
+    </context-param>
+    <context-param>
+        <param-name>bind-pass</param-name>
+        <param-value>Ty@#12Qe</param-value>
+    </context-param>
+    <context-param>
+        <param-name>createdn</param-name>
+        <param-value>cn=chka-acount-suprt-app,cn=Administrators,cn=config</param-value>
+    </context-param>
+    <context-param>
+        <param-name>createpass</param-name>
+        <!-- <param-value>I0AjQHlNajNAI1VrMkk9bDVPcHo9MEExcVhAI3NXYz0wRDhlVj1mUiNAI0A5Ykd0NT1OaFlAI0AjM209SnZ1Sz1pNUw9b1A5QCNAIyNaYVF4N1N3QzRkPUVAMiN2RjhyQjNnVD1uNkhAIz09</param-value> -->
+        <!--        <param-value>PUhUSnhUOUg9Q1RaXlBFQDh4QCM0KykoLV8jQD1eMktlLVZAIytXcCk0ZCNVWXojLWNSQGpRdkVfWmEtTFQ9cEcrV3ZAIw==</param-value>-->
+        <!--        <param-value>7S+F@5qT=EFer4=5feD=fJgUetW-3ZqW-MzD=welf=eDAPLh=eWE=QLRT=KG=DNM=baEw=Q</param-value>-->
+        <param-value>N1MrRkA1cVQ9RUZlcjQ9NWZlRD1mSmdVZXRXLTNacVctTXpEPXdlbGY9ZURBUExoPWVXRT1RTFJUPUtHPUROTT1iYUV3PVE=</param-value>
+        
+    </context-param>
+    <!--LDAP-->
+    <!-- start, single, bulk, sms forms related data -->
+    <context-param>
+        <description>NICSI Email</description>
+        <param-name>nicsi_email</param-name>
+        <!--<param-value>preeti.nhq@nic.in</param-value>-->
+        <param-value>nicsi-pi@nic.in</param-value>
+    </context-param>
+    <context-param>
+        <description>SMS Domestic Rate</description>
+        <param-name>sms_dom_rate</param-name>
+        <param-value>0.074</param-value>
+    </context-param>
+    <context-param>
+        <description>SMS Domestic Exempted Rate</description>
+        <param-name>sms_dom_exempt_rate</param-name>
+        <param-value>0.034</param-value>
+    </context-param>
+    <context-param>
+        <description>SMS International Rate</description>
+        <param-name>sms_inter_rate</param-name>
+        <param-value>4</param-value>
+    </context-param>
+    <context-param>
+        <description>SMS International Exempted Rate</description>
+        <param-name>sms_inter_exempt_rate</param-name>
+        <param-value>4</param-value>
+    </context-param>
+    <context-param>
+        <description>Email Rate</description>
+        <param-name>email_rate</param-name>
+        <param-value>0.5</param-value>
+    </context-param>
+    <context-param>
+        <description>NIC USERS BO</description>
+        <param-name>nic_bo</param-name>
+        <param-value>NIC Employees,nic-official-id,dio</param-value>
+    </context-param>
+    <context-param>
+        <description>WIFI-VALUE</description>
+        <param-name>wifi_values</param-name>
+        <param-value>NIC Employees:1~ias.nic.in:2~sansad.nic.in:2~ministers:2~ministry:30~NIC Support Outsourced:7~nkn-mailmigration:7~contractemps-min.nic.in:7</param-value>
+    </context-param>
+    <context-param>
+        <description>Whether to send sms/email</description>
+        <param-name>flag_notify</param-name>
+        <param-value>true</param-value>
+    </context-param><!-- added by pr on 16thmar2020 -->
+    <context-param>
+        <description>Support Email</description>
+        <param-name>sup_email</param-name>
+        <param-value>support@gov.in</param-value>
+    </context-param><!-- support email added by pr on 2ndjan18  -->
+    <context-param><!-- vpn and wifi emails added by pr on 11thdec18  -->
+        <description>VPN Support Email</description>
+        <param-name>vpn_sup_email</param-name>
+        <param-value>vpnsupport@nic.in</param-value>
+    </context-param><!-- support email added by pr on 2ndjan18  -->
+    <context-param>
+        <description>WIFI Support Email</description>
+        <param-name>wifi_sup_email</param-name>
+        <param-value>wifi@nic.in</param-value>
+    </context-param>
+    <!-- end, single, bulk, sms, wifi forms related data -->
+    <!-- start, emails related to forms : dns, vpn added by pr on 29thjan18 -->
+    <context-param>
+        <description>DNS NIC FIRST COORD</description>
+        <param-name>DNS_NIC_FIRST_COORD</param-name>
+        <!-- <param-value>preeti.nhq@nic.in,nitin.nknsp@gov.in,support@nic.in</param-value> -->
+        <!--<param-value>rsm@nic.in,prakash@nic.in,bkd@nic.in</param-value>-->
+
+        <param-value>prakash@nic.in</param-value><!--  line modified by pr on 19thfeb18  -->
+
+    </context-param>
+    <context-param>
+        <description>DNS GOV FIRST COORD</description>
+        <param-name>DNS_GOV_FIRST_COORD</param-name>
+        <!--<param-value>preeti.nhq@nic.in,nitin.nknsp@gov.in,support@nic.in</param-value> -->
+        <param-value>amishra@nic.in</param-value>
+    </context-param>
+    <context-param>
+        <description>DNS SECOND COORD</description>
+        <param-name>DNS_SECOND_COORD</param-name>
+        <!--<param-value>preeti.nhq@nic.in,nitin.nknsp@gov.in,support@nic.in</param-value>-->
+        <!--<param-value>seema@gov.in,rajesh.singh@gov.in,rajp@nic.in</param-value>-->
+        <!--        <param-value>rajesh.singh@gov.in</param-value>  line modified by pr on 19thfeb18          -->
+        <param-value>rajesh.singh@gov.in,rajp@nic.in</param-value><!--  line modified by pr on 23thfeb18  -->
+    </context-param>
+    <context-param>
+        <description>DNS MAILADMIN</description>
+        <param-name>DNS_MAILADMIN</param-name>
+        <!--<param-value>preeti.nhq@nic.in,nitin.nknsp@gov.in,support@nic.in</param-value>-->
+        <param-value>prakash@nic.in,divya.p@nic.in,sa1.nhq-dl@nic.in,owais@nic.in,kumar.rahul0105@nic.in</param-value>
+    </context-param>
+    <context-param>
+        <description>GEM DAADMIN</description>
+        <param-name>GEM_DA_ADMIN</param-name>
+        <param-value>gemapplicant@gem.gov.in</param-value>
+        <!--        <param-value>preeti.nhq@nic.in</param-value>-->
+    </context-param><!--  added by pr on 26thfeb18  -->
+    <context-param>
+        <description>Zimbra Email</description>
+        <param-name>zim_email</param-name>
+        <param-value>mailadmin-zim@lsmgr.nic.in</param-value>
+    </context-param><!-- zimbra email added by pr on 18thmar19 -->
+    <!-- end, emails related to forms : dns, vpn added by pr on 29thjan18 -->
+
+    <!--SSO-->
+      
+
+    <context-param>
+        <param-name>protocolurl</param-name>
+        <param-value>https://eforms.nic.in/</param-value>
+    </context-param>
+    
+    <context-param>
+        <param-name>emailupdatemobile</param-name>
+        <param-value>satya.nhq@nic.in</param-value>
+    </context-param>
+    
+    <context-param>
+        <param-name>niccert</param-name>
+        <!--        <param-value>satya.nhq@nic.in</param-value>-->
+        <param-value>incident@nic-cert.nic.in</param-value>
+    </context-param>
+
+    <context-param>
+        <description>parichay time out</description>
+        <param-name>pari_timeout</param-name>
+        <param-value>60</param-value>
+    </context-param>
+    <session-config>
+        <session-timeout>
+            60
+        </session-timeout>
+    </session-config>
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/error.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>403</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>405</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>405</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>SecureResource</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>restricted methods</web-resource-name>
+            <url-pattern>/*</url-pattern>
+            <http-method-omission>GET</http-method-omission>
+            <http-method-omission>POST</http-method-omission>
+            <http-method-omission>HEAD</http-method-omission>
+            <http-method-omission>OPTIONS</http-method-omission>
+        </web-resource-collection>
+        <auth-constraint/>
+    </security-constraint>
+</web-app>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

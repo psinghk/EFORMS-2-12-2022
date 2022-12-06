@@ -1,0 +1,165 @@
+ul.order-tracker {
+    padding: 0;
+}
+ul.order-tracker li .li-tracker {
+    width: 100%;
+    height: 5px;
+    position: relative;
+}
+ul.order-tracker li {
+    list-style: none;
+    float: left;
+    width: 20%;
+}
+li.active-track span.cercle-order {
+    width: 15px;
+    height: 15px;
+    background: #ccc;
+    display: block;
+    position: absolute;
+    top: -5px;
+    left: -1px;
+    transition: all .2s;
+    cursor: pointer;
+    border-radius: 50% !Important;
+}
+li.pending-track span.cercle-order {
+    width: 15px;
+    height: 15px;
+    display: block;
+    position: absolute;
+    top: -5px;
+    left: -1px;
+    transition: all .2s;
+    cursor: pointer;
+    border-radius: 50% !important;
+}
+li.reject-track span.cercle-order {
+    width: 15px;
+    height: 15px;
+    background: #ccc;
+    display: block;
+    position: absolute;
+    top: -5px;
+    left: -1px;
+    transition: all .2s;
+    cursor: pointer;
+    border-radius: 50%;
+}
+.li-track-desc {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #fff
+}
+
+.tracker-div {
+    margin-bottom: 5px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #ddd;
+    margin-top: 50px;
+}
+ul.order-tracker li.active-track .li-track-desc {
+    color: green;
+}
+ul.order-tracker li.pending-track .li-track-desc {
+    color: #333;
+}
+ul.order-tracker li.reject-track .li-track-desc {
+    color: #e43a45;
+}
+ul.order-tracker li.active-track .li-tracker {
+    background: green !important;
+    
+}
+ul.order-tracker li.active-track span.cercle-order {
+    background: green !important;
+}
+ul.order-tracker li i.fa-caret-down {
+    font-size: 26px;
+    position: absolute;
+    bottom: -27px;
+    left: 0;
+    color: #ccc;
+    display: none;
+}
+li.c-track.pending-track.curr-track i.fa-caret-down {
+    display: block;
+}
+.track-msg {
+    padding: 12px 12px 0 12px;
+    border: 1px solid #dddd;
+    background: #f9f9f9;
+    border-radius: 5px;
+    font-weight: 400;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+ul.order-tracker li.active-track {
+    display: inline-block;
+}
+ul.order-tracker li.pending-track {
+    display: inline-block;
+}
+ul.order-tracker li.reject-track {
+    display: inline-block;
+}
+ul.order-tracker li {
+    display: none;
+}
+li.pending-track div.li-tracker {
+    background: #ccc;
+}
+li.pending-track span.cercle-order {
+    background: #ccc;
+}
+.curr-track i.fa.fa-caret-down {
+    display: block;
+}
+li.d-track.us-track.m-track.curr-track.reject-track .li-tracker {
+    background: #e43a45;
+}
+li.d-track.us-track.m-track.curr-track.reject-track span.cercle-order {
+    background: #e43a45;
+}
+li.reject-track div.li-tracker {
+    background: #e43a45;
+}
+li.reject-track span.cercle-order {
+    background: #e43a45;
+    border-radius: 50% !important;
+}
+/*ul.order-tracker li:not(:first-child)::after {
+    content: "";
+    width: 15px;
+    height: 15px;
+    background: #ccc;
+    display: block;
+    position: absolute;
+    top: 26px;
+    right: 11px;
+    transition: all .2s;
+    cursor: pointer;
+    border-radius: 50% !Important;
+}*/
+ul.order-tracker li:last-child::after {
+    content: "";
+    width: 15px;
+    height: 15px;
+    display: block;
+    position: absolute;
+    top: 26px;
+    right: 11px;
+    transition: all .2s;
+    background: #ccc;
+}
+ul.order-tracker li.active-track.curr-track:last-child::after { 
+    background: green !important;
+}
+ul.order-tracker li.reject-track.curr-track:last-child::after { 
+    background: #e43a45 !important;
+}
+.col-md-12.track-user-record {
+    overflow: auto;
+}

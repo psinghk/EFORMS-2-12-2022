@@ -1,0 +1,43 @@
+
+Flow of the forms:
+
+WIFI  : request goes to support then, request goes to the coordinator. from coordinator to mail-admin panel.when the request is marked as done at the mail-admin level, then an attribute is updated in the LDAP nicWIFI.CA and support levels are skipped in this form.
+
+DNS: When user fills the form and submits , then it is forwarded to the CA then first coordinator, depending on the fields values it is either forwarded to the second coordinator or the mail admin . if it is forwarded to the mail-admin directly it gets completed from there. if it has been forwarded to the second coordinator then from there it gets forwarded to the mail-admin and mail-admin then completes it.Support panel is skipped in this form. 
+
+SMS : an SMS Auth ID is created at the mail-admin level.
+
+Single User : an Email ID is created at the mail-admin level.
+
+Bulk User : Email IDs are created at the mail-admin level. CA is skipped
+
+VPN : support is skipped. CA -> Cooordinator -> Mailadmin
+
+NKN : an Email ID is created at the mail-admin level.
+
+Mobile Update : user form -> CA -> Support -> Coordinator -> Mail-admin. mobile attribute is updated in the LDAP at the mail-admin level.
+
+
+// table names for all forms (all forms has email and mobile with the name 'auth_email' and 'mobile')
+
+1. SMS =sms_registration
+2. BULK =bulk_registration
+3. IP = ip_registration
+4. DIST = distribution_registration
+5. GEM = gem_registration
+6. IMAP = imappop_registration
+7. LDAP = ldap_registration
+8. MOB = mobile_registration
+9. NKN = nkn_registration
+10. RELAY = relay_registration
+11. SINGLE = single_registration
+12. WIFI = wifi_registration
+13. DNS = dns_registration, dns_registration_url, dns_registration_location, dns_registration_ip
+
+
+
+manual and esigned pdfs : /Users/ashwini/Documents/eForms/PDF/
+
+application pdf files: /Users/ashwini/Documents/eForms/AppPDF/
+
+excel files : /Users/ashwini/Documents/eForms/Excel/

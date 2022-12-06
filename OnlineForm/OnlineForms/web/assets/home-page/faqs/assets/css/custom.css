@@ -1,0 +1,90 @@
+.logo img {
+    padding: 0;
+    max-height: 55px;
+}
+.main-nav > ul > li {
+    position: relative;
+    white-space: nowrap;
+    float: left;
+    line-height: 38px;
+}
+.main-nav, .main-nav * {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.main-nav a:hover, .main-nav .active > a, .main-nav li:hover > a {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-position: under;
+}
+.main-nav a {
+    display: block;
+    position: relative;
+    color: #fff;
+    padding: 10px 15px;
+    margin: 0px 10px;
+    transition: 0.3s;
+    font-size: 14px;
+    font-family: "Exo", sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.fixed-top {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+}
+.float-right {
+    float: right;
+}
+.logo.float-left {
+    float: left;
+}
+.nav-faqs {
+    height: 75px;
+    padding: 10px 0;
+}
+.header-pages {
+    height: 75px;
+    padding: 10px 0;
+    background: #383d41cf;
+}
+header#header label {
+    color: #fff;
+}
+form.form-group label input {
+    float: left !important;
+}
+input.faq-srch {
+    background: hsl(94, 48%, 56%);
+    border: 1px solid hsl(73, 46%, 55%);
+    color: #fff;
+    font-size: 16px;
+    transition: .3s all;
+    padding: 15px 31px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+input.faq-srch:hover {
+    background: hsl(94, 43%, 49%);
+    border: 1px solid hsl(73, 42%, 48%);
+}
+form.form-group label {
+    float: left;
+    margin-bottom: 5px;
+}
+form.form-group {
+    margin-top: 25px;
+}
+.form-group .col-md-8 {
+    float: left;
+    width: 85%;
+}
+li.cd-faq__title h2 {
+    color: #fff;
+    background: hsl(94, 48%, 56%);
+    padding: 15px 10px;
+}
